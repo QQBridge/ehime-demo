@@ -2,6 +2,9 @@
   "name": "chatbot-ui",
   "version": "2.0.0",
   "private": true,
+  "engines": {
+    "node": "18.17.1"
+  },
   "scripts": {
     "chat": "supabase start && npm run db-types && npm run dev",
     "restart": "supabase stop && npm run chat",
@@ -9,7 +12,7 @@
     "prepare": "husky install",
     "clean": "npm run lint:fix && npm run format:write",
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/ && cp .env.local .next/standalone",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -61,7 +64,7 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "@supabase/ssr": "^0.0.10",
     "@supabase/supabase-js": "^2.38.4",
-    "@tabler/icons-react": "^2.40.0",
+    "@tabler/icons-react": "^2.47.0",
     "@vercel/analytics": "^1.1.1",
     "@vercel/edge-config": "^0.4.1",
     "@xenova/transformers": "^2.13.4",
@@ -83,6 +86,7 @@
     "next-themes": "^0.2.1",
     "openai": "^4.23.0",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^4.3.136",
     "react": "^18",
     "react-day-picker": "^8.9.1",
     "react-dom": "^18",
@@ -102,6 +106,7 @@
     "@tailwindcss/typography": "^0.5.10",
     "@testing-library/jest-dom": "^6.2.0",
     "@testing-library/react": "^14.1.2",
+    "@types/date-fns": "^2.6.0",
     "@types/jest": "^29.5.11",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.4",

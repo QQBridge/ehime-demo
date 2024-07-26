@@ -15,15 +15,17 @@ import useHotkey from "@/lib/hooks/use-hotkey"
 import { Tables } from "@/supabase/types"
 import { IconTrash } from "@tabler/icons-react"
 import { FC, useContext, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 
 interface DeleteChatProps {
   chat: Tables<"chats">
 }
 
 export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {
+  const router = useRouter()
   useHotkey("Backspace", () => setShowChatDialog(true))
 
-  const { setChats } = useContext(ChatbotUIContext)
+  const { setChats, chats, selectedWorkspace } = useContext(ChatbotUIContext)
   const { handleNewChat } = useChatHandler()
 
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -36,8 +38,12 @@ export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {
     setChats(prevState => prevState.filter(c => c.id !== chat.id))
 
     setShowChatDialog(false)
-
-    handleNewChat()
+    const newChats = chats.filter(c => c.id !== chat.id)
+    if (newChats.length > 0) {
+      router.push(`/${selectedWorkspace!.id}/chat/${newChats[0].id}`)
+    } else {
+      handleNewChat()
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -54,16 +60,16 @@ export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {
 
       <DialogContent onKeyDown={handleKeyDown}>
         <DialogHeader>
-          <DialogTitle>Delete {chat.name}</DialogTitle>
+          <DialogTitle>{chat.name} を削除する</DialogTitle>
 
           <DialogDescription>
-            Are you sure you want to delete this chat?
+            チャットを削除してもよろしいでしょうか？
           </DialogDescription>
         </DialogHeader>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => setShowChatDialog(false)}>
-            Cancel
+            キャンセル
           </Button>
 
           <Button
@@ -71,7 +77,7 @@ export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {
             variant="destructive"
             onClick={handleDeleteChat}
           >
-            Delete
+            削除
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,30 +1,34 @@
 "use client"
 
-import { Dashboard } from "@/components/ui/dashboard"
-import { ChatbotUIContext } from "@/context/context"
-import { getAssistantWorkspacesByWorkspaceId } from "@/db/assistants"
-import { getChatsByWorkspaceId } from "@/db/chats"
-import { getCollectionWorkspacesByWorkspaceId } from "@/db/collections"
-import { getFileWorkspacesByWorkspaceId } from "@/db/files"
-import { getFoldersByWorkspaceId } from "@/db/folders"
-import { getModelWorkspacesByWorkspaceId } from "@/db/models"
-import { getPresetWorkspacesByWorkspaceId } from "@/db/presets"
-import { getPromptWorkspacesByWorkspaceId } from "@/db/prompts"
-import { getAssistantImageFromStorage } from "@/db/storage/assistant-images"
-import { getToolWorkspacesByWorkspaceId } from "@/db/tools"
-import { getWorkspaceById } from "@/db/workspaces"
-import { convertBlobToBase64 } from "@/lib/blob-to-b64"
-import { supabase } from "@/lib/supabase/browser-client"
-import { LLMID } from "@/types"
-import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { ReactNode, useContext, useEffect, useState } from "react"
+import {Tables} from "@/supabase/types"
+import {Dashboard} from "@/components/ui/dashboard"
+import {ChatbotUIContext} from "@/context/context"
+import {getAssistantWorkspacesByWorkspaceId, getPublicAssistants} from "@/db/assistants"
+import {getAssistantCollectionsByAssistantId} from "@/db/assistant-collections"
+import {getAssistantFilesByAssistantId} from "@/db/assistant-files"
+import {getCollectionFilesByCollectionId} from "@/db/collection-files"
+import {getChatsByWorkspaceId} from "@/db/chats"
+import {getCollectionWorkspacesByWorkspaceId} from "@/db/collections"
+import {getFileWorkspacesByWorkspaceId} from "@/db/files"
+import {getFoldersByWorkspaceId} from "@/db/folders"
+import {getModelWorkspacesByWorkspaceId} from "@/db/models"
+import {getPresetWorkspacesByWorkspaceId} from "@/db/presets"
+import {getPromptWorkspacesByWorkspaceId} from "@/db/prompts"
+import {getAssistantImageFromStorage} from "@/db/storage/assistant-images"
+import {getToolWorkspacesByWorkspaceId} from "@/db/tools"
+import {getWorkspaceById} from "@/db/workspaces"
+import {convertBlobToBase64} from "@/lib/blob-to-b64"
+import {supabase} from "@/lib/supabase/browser-client"
+import {LLMID} from "@/types"
+import {useParams, useRouter, useSearchParams} from "next/navigation"
+import {ReactNode, useContext, useEffect, useState} from "react"
 import Loading from "../loading"
 
 interface WorkspaceLayoutProps {
   children: ReactNode
 }
 
-export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
+export default function WorkspaceLayout({children}: WorkspaceLayoutProps) {
   const router = useRouter()
 
   const params = useParams()
@@ -43,7 +47,6 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setPrompts,
     setTools,
     setModels,
-    selectedWorkspace,
     setSelectedWorkspace,
     setSelectedChat,
     setChatMessages,
@@ -60,7 +63,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       const session = (await supabase.auth.getSession()).data.session
 
       if (!session) {
@@ -72,7 +75,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
   }, [])
 
   useEffect(() => {
-    ;(async () => await fetchWorkspaceData(workspaceId))()
+    ; (async () => await fetchWorkspaceData(workspaceId))()
 
     setUserInput("")
     setChatMessages([])
@@ -95,9 +98,11 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setSelectedWorkspace(workspace)
 
     const assistantData = await getAssistantWorkspacesByWorkspaceId(workspaceId)
-    setAssistants(assistantData.assistants)
+    const publicAssistants = await getPublicAssistants()
+    setAssistants([...assistantData.assistants, ...publicAssistants])
 
-    for (const assistant of assistantData.assistants) {
+    let allFiles: Tables<"files">[] = []
+    for (const assistant of [...assistantData.assistants, ...publicAssistants]) {
       let url = ""
 
       if (assistant.image_path) {
@@ -129,6 +134,19 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
           }
         ])
       }
+
+      const assistantFiles = (await getAssistantFilesByAssistantId(assistant.id))
+        .files
+      allFiles = [...allFiles, ...assistantFiles]
+      const assistantCollections = (
+        await getAssistantCollectionsByAssistantId(assistant.id)
+      ).collections
+      for (const collection of assistantCollections) {
+        const collectionFiles = (
+          await getCollectionFilesByCollectionId(collection.id)
+        ).files
+        allFiles = [...allFiles, ...collectionFiles]
+      }
     }
 
     const chats = await getChatsByWorkspaceId(workspaceId)
@@ -142,7 +160,7 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setFolders(folders)
 
     const fileData = await getFileWorkspacesByWorkspaceId(workspaceId)
-    setFiles(fileData.files)
+    setFiles([...fileData.files, ...allFiles])
 
     const presetData = await getPresetWorkspacesByWorkspaceId(workspaceId)
     setPresets(presetData.presets)
@@ -159,15 +177,15 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
     setChatSettings({
       model: (searchParams.get("model") ||
         workspace?.default_model ||
-        "gpt-4-1106-preview") as LLMID,
+        "gpt-4o") as LLMID,
       prompt:
         workspace?.default_prompt ||
-        "You are a friendly, helpful AI assistant.",
-      temperature: workspace?.default_temperature || 0.5,
-      contextLength: workspace?.default_context_length || 4096,
-      includeProfileContext: workspace?.include_profile_context || true,
+        "あなたは多様な分野に詳しいアシスタントです。力の限りでユーザーをサポートしてください。",
+      temperature: workspace?.default_temperature || 1.0,
+      contextLength: workspace?.default_context_length || 128000,
+      includeProfileContext: workspace?.include_profile_context || false,
       includeWorkspaceInstructions:
-        workspace?.include_workspace_instructions || true,
+        workspace?.include_workspace_instructions || false,
       embeddingsProvider:
         (workspace?.embeddings_provider as "openai" | "local") || "openai"
     })

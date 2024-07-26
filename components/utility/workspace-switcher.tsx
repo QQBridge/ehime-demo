@@ -159,7 +159,7 @@ export const WorkspaceSwitcher: FC<WorkspaceSwitcherProps> = ({}) => {
                 return (
                   <Button
                     key={workspace.id}
-                    className="flex items-center justify-start"
+                    className="flex items-center justify-start border border-black"
                     variant="ghost"
                     onClick={() => handleSelect(workspace.id)}
                   >
@@ -198,7 +198,7 @@ export const WorkspaceSwitcher: FC<WorkspaceSwitcherProps> = ({}) => {
                 return (
                   <Button
                     key={workspace.id}
-                    className="flex items-center justify-start"
+                    className="flex items-center justify-start border border-black"
                     variant="ghost"
                     onClick={() => handleSelect(workspace.id)}
                   >

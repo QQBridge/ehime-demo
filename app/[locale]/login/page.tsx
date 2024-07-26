@@ -119,6 +119,19 @@ export default async function Login({
       }
     }
 
+    // const passwordRegex =
+    //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).*$/
+    // if (!passwordRegex.test(password) || password.length < 8) {
+    //   return redirect(
+    //     "/login?message=Password must include uppercase, lowercase, numbers and symbols, and must be longer than 8 characters."
+    //   )
+    // }
+    if (password.length < 8) {
+      return redirect(
+        "/login?message=Password must include uppercase, lowercase, numbers and symbols, and must be longer than 8 characters."
+      )
+    }
+
     const cookieStore = cookies()
     const supabase = createClient(cookieStore)
 
@@ -170,7 +183,7 @@ export default async function Login({
         <Brand />
 
         <Label className="text-md mt-4" htmlFor="email">
-          Email
+          Emailアドレス
         </Label>
         <Input
           className="mb-3 rounded-md border bg-inherit px-4 py-2"
@@ -180,7 +193,7 @@ export default async function Login({
         />
 
         <Label className="text-md" htmlFor="password">
-          Password
+          パスワード
         </Label>
         <Input
           className="mb-6 rounded-md border bg-inherit px-4 py-2"
@@ -189,24 +202,24 @@ export default async function Login({
           placeholder="••••••••"
         />
 
-        <SubmitButton className="mb-2 rounded-md bg-blue-700 px-4 py-2 text-white">
-          Login
+        <SubmitButton className="mb-2 rounded-md bg-blue-700 px-4 py-2 text-white text-center">
+          ログイン
         </SubmitButton>
 
         <SubmitButton
           formAction={signUp}
-          className="border-foreground/20 mb-2 rounded-md border px-4 py-2"
+          className="border-foreground/20 mb-2 rounded-md border px-4 py-2 text-center"
         >
-          Sign Up
+          メールアドレスで登録
         </SubmitButton>
 
         <div className="text-muted-foreground mt-1 flex justify-center text-sm">
-          <span className="mr-1">Forgot your password?</span>
+          <span className="mr-1">パスワードを忘れた場合:</span>
           <button
             formAction={handleResetPassword}
             className="text-primary ml-1 underline hover:opacity-80"
           >
-            Reset
+            パスワードをリセット
           </button>
         </div>
 

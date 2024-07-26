@@ -5,6 +5,7 @@ import { CHUNK_OVERLAP, CHUNK_SIZE } from "."
 
 export const processDocX = async (text: string): Promise<FileItemChunk[]> => {
   const splitter = new RecursiveCharacterTextSplitter({
+    separators: ["。", ". "],
     chunkSize: CHUNK_SIZE,
     chunkOverlap: CHUNK_OVERLAP
   })
@@ -14,10 +15,19 @@ export const processDocX = async (text: string): Promise<FileItemChunk[]> => {
 
   for (let i = 0; i < splitDocs.length; i++) {
     const doc = splitDocs[i]
+    
+    let content = doc.pageContent
+
+    // 先頭の「。」を取り除く
+    if (content.startsWith("。")) {
+      content = content.substring(1)
+    } else if (content.startsWith(". ")) {
+      content = content.substring(2)
+    }
 
     chunks.push({
-      content: doc.pageContent,
-      tokens: encode(doc.pageContent).length
+      content: content,
+      tokens: encode(content).length
     })
   }
 

@@ -117,7 +117,7 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
 
   // RETIEVAL STORE
   const [useRetrieval, setUseRetrieval] = useState<boolean>(true)
-  const [sourceCount, setSourceCount] = useState<number>(4)
+  const [sourceCount, setSourceCount] = useState<number>(8)
 
   // TOOL STORE
   const [selectedTools, setSelectedTools] = useState<Tables<"tools">[]>([])

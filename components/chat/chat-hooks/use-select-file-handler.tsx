@@ -1,9 +1,10 @@
-import { ChatbotUIContext } from "@/context/context"
-import { createDocXFile, createFile } from "@/db/files"
-import { LLM_LIST } from "@/lib/models/llm/llm-list"
+import {ChatbotUIContext} from "@/context/context"
+import {createDocXFile, createFile} from "@/db/files"
+import {createChatFile} from "@/db/chat-files"
+import {LLM_LIST} from "@/lib/models/llm/llm-list"
 import mammoth from "mammoth"
-import { useContext, useEffect, useState } from "react"
-import { toast } from "sonner"
+import {useContext, useEffect, useState} from "react"
+import {toast} from "sonner"
 
 export const ACCEPTED_FILE_TYPES = [
   "text/csv",
@@ -18,11 +19,13 @@ export const useSelectFileHandler = () => {
   const {
     selectedWorkspace,
     profile,
+    selectedChat,
     chatSettings,
     setNewMessageImages,
     setNewMessageFiles,
     setShowFilesDisplay,
     setFiles,
+    setChatFiles,
     setUseRetrieval
   } = useContext(ChatbotUIContext)
 
@@ -64,7 +67,7 @@ export const useSelectFileHandler = () => {
         } else if (
           simplifiedFileType.includes(
             "vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-              "docx"
+            "docx"
           )
         ) {
           simplifiedFileType = "docx"
@@ -73,7 +76,7 @@ export const useSelectFileHandler = () => {
         setNewMessageFiles(prev => [
           ...prev,
           {
-            id: "loading",
+            id: file.name,
             name: file.name,
             type: simplifiedFileType,
             file: file
@@ -84,7 +87,7 @@ export const useSelectFileHandler = () => {
         if (
           file.type.includes(
             "vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-              "docx"
+            "docx"
           )
         ) {
           const arrayBuffer = await file.arrayBuffer()
@@ -112,16 +115,22 @@ export const useSelectFileHandler = () => {
 
           setNewMessageFiles(prev =>
             prev.map(item =>
-              item.id === "loading"
+              item.id === file.name
                 ? {
-                    id: createdFile.id,
-                    name: createdFile.name,
-                    type: createdFile.type,
-                    file: file
-                  }
+                  id: createdFile.id,
+                  name: createdFile.name,
+                  type: createdFile.type,
+                  file: file
+                }
                 : item
             )
           )
+
+          await createChatFile({
+            user_id: profile.user_id,
+            chat_id: selectedChat!.id,
+            file_id: createdFile.id
+          })
 
           reader.onloadend = null
 
@@ -133,7 +142,7 @@ export const useSelectFileHandler = () => {
             : reader.readAsText(file)
         }
       } else {
-        throw new Error("Unsupported file type")
+        //throw new Error("Unsupported file type")
       }
 
       reader.onloadend = async function () {
@@ -173,16 +182,22 @@ export const useSelectFileHandler = () => {
 
             setNewMessageFiles(prev =>
               prev.map(item =>
-                item.id === "loading"
+                item.id === file.name
                   ? {
-                      id: createdFile.id,
-                      name: createdFile.name,
-                      type: createdFile.type,
-                      file: file
-                    }
+                    id: createdFile.id,
+                    name: createdFile.name,
+                    type: createdFile.type,
+                    file: file
+                  }
                   : item
               )
             )
+
+            await createChatFile({
+              user_id: profile.user_id,
+              chat_id: selectedChat!.id,
+              file_id: createdFile.id
+            })
           }
         } catch (error: any) {
           toast.error("Failed to upload. " + error?.message, {
@@ -191,7 +206,7 @@ export const useSelectFileHandler = () => {
           setNewMessageImages(prev =>
             prev.filter(img => img.messageId !== "temp")
           )
-          setNewMessageFiles(prev => prev.filter(file => file.id !== "loading"))
+          setNewMessageFiles(prev => prev.filter(file => file.id !== file.name))
         }
       }
     }

@@ -30,6 +30,13 @@ CREATE POLICY "Allow full access to own assistant_files"
     USING (user_id = auth.uid())
     WITH CHECK (user_id = auth.uid());
 
+CREATE POLICY "Allow view access to assistant_files for non-private assistants"
+    ON assistant_files
+    FOR SELECT
+    USING (assistant_id IN (
+        SELECT id FROM assistants WHERE sharing <> 'private'
+    ));
+
 -- TRIGGERS --
 
 CREATE TRIGGER update_assistant_files_updated_at
@@ -68,6 +75,13 @@ CREATE POLICY "Allow full access to own assistant_collections"
     ON assistant_collections
     USING (user_id = auth.uid())
     WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Allow view access to assistant_collections for non-private assistants"
+    ON assistant_collections
+    FOR SELECT
+    USING (assistant_id IN (
+        SELECT id FROM assistants WHERE sharing <> 'private'
+    ));
 
 -- TRIGGERS --
 

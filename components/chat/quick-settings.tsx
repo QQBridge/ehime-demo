@@ -20,7 +20,6 @@ import {
 } from "../ui/dropdown-menu"
 import { Input } from "../ui/input"
 import { QuickSettingOption } from "./quick-setting-option"
-import { set } from "date-fns"
 
 interface QuickSettingsProps {}
 
@@ -191,7 +190,10 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       }}
     >
       <DropdownMenuTrigger asChild className="max-w-[400px]" disabled={loading}>
-        <Button variant="ghost" className="flex space-x-3 text-lg">
+        <Button
+          variant="ghost"
+          className="flex space-x-3 text-md justify-start border border-black"
+        >
           {selectedPreset && (
             <ModelIcon
               provider={modelDetails?.provider || "custom"}
@@ -219,19 +221,15 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
           {loading ? (
             <div className="animate-pulse">Loading assistant...</div>
           ) : (
-            <>
+            <div className="flex w-full justify-between">
               <div className="overflow-hidden text-ellipsis">
-                {isModified &&
-                  (selectedPreset || selectedAssistant) &&
-                  "Modified "}
-
                 {selectedPreset?.name ||
                   selectedAssistant?.name ||
-                  t("Quick Settings")}
+                  t("デフォルト生成AI(GPT-4o)")}
               </div>
 
               <IconChevronDown className="ml-1" />
-            </>
+            </div>
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -241,13 +239,13 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
         align="start"
       >
         {presets.length === 0 && assistants.length === 0 ? (
-          <div className="p-8 text-center">No items found.</div>
+          <div className="p-8 text-center">AIが登録されていません。</div>
         ) : (
           <>
             <Input
               ref={inputRef}
               className="w-full"
-              placeholder="Search..."
+              placeholder="AIを検索"
               value={search}
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => e.stopPropagation()}

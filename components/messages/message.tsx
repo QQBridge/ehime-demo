@@ -23,6 +23,9 @@ import { TextareaAutosize } from "../ui/textarea-autosize"
 import { WithTooltip } from "../ui/with-tooltip"
 import { MessageActions } from "./message-actions"
 import { MessageMarkdown } from "./message-markdown"
+import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
+import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
+import { getCollectionFilesByCollectionId } from "@/db/collection-files"
 
 const ICON_SIZE = 32
 
@@ -170,7 +173,7 @@ export const Message: FC<MessageProps> = ({
           name: parentFile.name,
           count: 1,
           type: parentFile.type,
-          description: parentFile.description
+          description: parentFile.description ?? ""
         }
       } else {
         acc[parentFile.id].count += 1
@@ -308,73 +311,113 @@ export const Message: FC<MessageProps> = ({
             <MessageMarkdown content={message.content} />
           )}
         </div>
-
-        {fileItems.length > 0 && (
-          <div className="border-primary mt-6 border-t pt-4 font-bold">
-            {!viewSources ? (
-              <div
-                className="flex cursor-pointer items-center text-lg hover:opacity-50"
-                onClick={() => setViewSources(true)}
-              >
-                {fileItems.length}
-                {fileItems.length > 1 ? " Sources " : " Source "}
-                from {Object.keys(fileSummary).length}{" "}
-                {Object.keys(fileSummary).length > 1 ? "Files" : "File"}{" "}
-                <IconCaretRightFilled className="ml-1" />
-              </div>
-            ) : (
-              <>
+        <div
+          key={
+            Object.values(fileSummary).map((file, index) => {
+              fileItems.filter(fileItem => {
+                const parentFile = files.find(
+                  parentFile => parentFile.id === fileItem.file_id
+                )
+                return parentFile?.id === file.id
+              })
+            }).length
+          }
+        >
+          {Object.values(fileSummary).map((file, _) =>
+            fileItems.filter(fileItem => {
+              const parentFile = files.find(
+                parentFile => parentFile.id === fileItem.file_id
+              )
+              return parentFile?.id === file.id
+            })
+          ).length > 0 && (
+            <div className="border-primary mt-6 border-t pt-4 font-bold">
+              {!viewSources ? (
                 <div
                   className="flex cursor-pointer items-center text-lg hover:opacity-50"
-                  onClick={() => setViewSources(false)}
+                  onClick={() => setViewSources(true)}
                 >
-                  {fileItems.length}
-                  {fileItems.length > 1 ? " Sources " : " Source "}
-                  from {Object.keys(fileSummary).length}{" "}
-                  {Object.keys(fileSummary).length > 1 ? "Files" : "File"}{" "}
-                  <IconCaretDownFilled className="ml-1" />
+                  {Object.keys(fileSummary).length}
+                  {"個のファイルのうち、"}
+                  {
+                    Object.values(fileSummary).flatMap((file, _) =>
+                      fileItems.filter(fileItem => {
+                        const parentFile = files.find(
+                          parentFile => parentFile.id === fileItem.file_id
+                        )
+                        return parentFile?.id === file.id
+                      })
+                    ).length
+                  }
+                  {"箇所から引用しております。"}
+                  <IconCaretRightFilled className="ml-1" />
                 </div>
-
-                <div className="mt-3 space-y-4">
-                  {Object.values(fileSummary).map((file, index) => (
-                    <div key={index}>
-                      <div className="flex items-center space-x-2">
-                        <div>
-                          <FileIcon type={file.type} />
-                        </div>
-
-                        <div className="truncate">{file.name}</div>
-                      </div>
-
-                      {fileItems
-                        .filter(fileItem => {
+              ) : (
+                <>
+                  <div
+                    className="flex cursor-pointer items-center text-lg hover:opacity-50"
+                    onClick={() => setViewSources(false)}
+                  >
+                    {" "}
+                    {Object.keys(fileSummary).length}
+                    {"個のファイルのうち、"}
+                    {
+                      Object.values(fileSummary).flatMap((file, _) =>
+                        fileItems.filter(fileItem => {
                           const parentFile = files.find(
                             parentFile => parentFile.id === fileItem.file_id
                           )
                           return parentFile?.id === file.id
                         })
-                        .map((fileItem, index) => (
-                          <div
-                            key={index}
-                            className="ml-8 mt-1.5 flex cursor-pointer items-center space-x-2 hover:opacity-50"
-                            onClick={() => {
-                              setSelectedFileItem(fileItem)
-                              setShowFileItemPreview(true)
-                            }}
-                          >
-                            <div className="text-sm font-normal">
-                              <span className="mr-1 text-lg font-bold">-</span>{" "}
-                              {fileItem.content.substring(0, 200)}...
-                            </div>
+                      ).length
+                    }
+                    {"箇所から引用しております。"}
+                    <IconCaretDownFilled className="ml-1" />
+                  </div>
+
+                  <div className="mt-3 space-y-4">
+                    {Object.values(fileSummary).map((file, index) => (
+                      <div key={index}>
+                        <div className="flex items-center space-x-2">
+                          <div>
+                            <FileIcon type={file.type} />
                           </div>
-                        ))}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
+
+                          <div className="truncate">{file.name}</div>
+                        </div>
+
+                        {fileItems
+                          .filter(fileItem => {
+                            const parentFile = files.find(
+                              parentFile => parentFile.id === fileItem.file_id
+                            )
+                            return parentFile?.id === file.id
+                          })
+                          .map((fileItem, index) => (
+                            <div
+                              key={index}
+                              className="ml-8 mt-1.5 flex cursor-pointer items-center space-x-2 hover:opacity-50"
+                              onClick={() => {
+                                setSelectedFileItem(fileItem)
+                                setShowFileItemPreview(true)
+                              }}
+                            >
+                              <div className="text-sm font-normal">
+                                <span className="mr-1 text-lg font-bold">
+                                  -
+                                </span>{" "}
+                                {fileItem.content.substring(0, 200)}...
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
           {message.image_paths.map((path, index) => {

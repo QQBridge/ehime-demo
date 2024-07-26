@@ -1,16 +1,16 @@
-import { ChatbotUIContext } from "@/context/context"
-import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
-import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
-import { getAssistantToolsByAssistantId } from "@/db/assistant-tools"
-import { updateChat } from "@/db/chats"
-import { getCollectionFilesByCollectionId } from "@/db/collection-files"
-import { deleteMessagesIncludingAndAfter } from "@/db/messages"
-import { buildFinalMessages } from "@/lib/build-prompt"
-import { Tables } from "@/supabase/types"
-import { ChatMessage, ChatPayload, LLMID, ModelProvider } from "@/types"
-import { useRouter } from "next/navigation"
-import { useContext, useEffect, useRef } from "react"
-import { LLM_LIST } from "../../../lib/models/llm/llm-list"
+import {ChatbotUIContext} from "@/context/context"
+import {getAssistantCollectionsByAssistantId} from "@/db/assistant-collections"
+import {getAssistantFilesByAssistantId} from "@/db/assistant-files"
+import {getAssistantToolsByAssistantId} from "@/db/assistant-tools"
+import {updateChat} from "@/db/chats"
+import {getCollectionFilesByCollectionId} from "@/db/collection-files"
+import {deleteMessagesIncludingAndAfter} from "@/db/messages"
+import {buildFinalMessages} from "@/lib/build-prompt"
+import {Tables} from "@/supabase/types"
+import {ChatMessage, ChatPayload, LLMID, ModelProvider} from "@/types"
+import {useRouter} from "next/navigation"
+import {useContext, useEffect, useRef} from "react"
+import {LLM_LIST} from "../../../lib/models/llm/llm-list"
 import {
   createTempMessages,
   handleCreateChat,
@@ -21,6 +21,7 @@ import {
   processResponse,
   validateChatSettings
 } from "../chat-helpers"
+import type { ChatFile } from "@/types"
 
 export const useChatHandler = () => {
   const router = useRouter()
@@ -174,8 +175,18 @@ export const useChatHandler = () => {
       //     "openai"
       // })
     }
-
-    return router.push(`/${selectedWorkspace.id}/chat`)
+    const newChat = await handleCreateChat(
+      chatSettings!,
+      profile!,
+      selectedWorkspace!,
+      "新しいチャット",
+      selectedAssistant!,
+      //newMessageFiles,
+      setSelectedChat,
+      setChats,
+      //setChatFiles
+    )
+    return router.push(`/${selectedWorkspace.id}/chat/${newChat.id}`)
   }
 
   const handleFocusChatInput = () => {
@@ -227,28 +238,44 @@ export const useChatHandler = () => {
         messageContent
       )
 
-      let currentChat = selectedChat ? { ...selectedChat } : null
+      let currentChat = {...selectedChat!}
 
       const b64Images = newMessageImages.map(image => image.base64)
 
       let retrievedFileItems: Tables<"file_items">[] = []
 
+      let allFiles: Array<{id: string, name: string, type: string}> = []
+        if (selectedAssistant) {
+        const assistantFiles = (
+          await getAssistantFilesByAssistantId(selectedAssistant.id)
+        ).files
+        allFiles = [...assistantFiles]
+        const assistantCollections = (
+          await getAssistantCollectionsByAssistantId(selectedAssistant.id)
+        ).collections
+        for (const collection of assistantCollections) {
+          const collectionFiles = (
+            await getCollectionFilesByCollectionId(collection.id)
+          ).files
+          allFiles = [...allFiles, ...collectionFiles]
+        }
+      }
       if (
-        (newMessageFiles.length > 0 || chatFiles.length > 0) &&
+        (newMessageFiles.length > 0 || chatFiles.length > 0 || allFiles.length > 0) &&
         useRetrieval
       ) {
         setToolInUse("retrieval")
-
+        
         retrievedFileItems = await handleRetrieval(
           userInput,
           newMessageFiles,
-          chatFiles,
+          [...allFiles.map(element => ({...element, file: null})), ...chatFiles],
           chatSettings!.embeddingsProvider,
           sourceCount
         )
       }
 
-      const { tempUserChatMessage, tempAssistantChatMessage } =
+      const {tempUserChatMessage, tempAssistantChatMessage} =
         createTempMessages(
           messageContent,
           chatMessages,
@@ -337,32 +364,17 @@ export const useChatHandler = () => {
           )
         }
       }
+      const updatedChat = await updateChat(currentChat.id, {
+        updated_at: new Date().toISOString()
+      })
 
-      if (!currentChat) {
-        currentChat = await handleCreateChat(
-          chatSettings!,
-          profile!,
-          selectedWorkspace!,
-          messageContent,
-          selectedAssistant!,
-          newMessageFiles,
-          setSelectedChat,
-          setChats,
-          setChatFiles
+      setChats(prevChats => {
+        const updatedChats = prevChats.map(prevChat =>
+          prevChat.id === updatedChat.id ? updatedChat : prevChat
         )
-      } else {
-        const updatedChat = await updateChat(currentChat.id, {
-          updated_at: new Date().toISOString()
-        })
 
-        setChats(prevChats => {
-          const updatedChats = prevChats.map(prevChat =>
-            prevChat.id === updatedChat.id ? updatedChat : prevChat
-          )
-
-          return updatedChats
-        })
-      }
+        return updatedChats
+      })
 
       await handleCreateMessages(
         chatMessages,

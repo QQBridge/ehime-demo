@@ -10,6 +10,7 @@ export const processPdf = async (pdf: Blob): Promise<FileItemChunk[]> => {
   let completeText = docs.map(doc => doc.pageContent).join(" ")
 
   const splitter = new RecursiveCharacterTextSplitter({
+    separators: ["。", ". "],
     chunkSize: CHUNK_SIZE,
     chunkOverlap: CHUNK_OVERLAP
   })
@@ -20,9 +21,18 @@ export const processPdf = async (pdf: Blob): Promise<FileItemChunk[]> => {
   for (let i = 0; i < splitDocs.length; i++) {
     const doc = splitDocs[i]
 
+    let content = doc.pageContent
+
+    // 先頭の「。」を取り除く
+    if (content.startsWith("。")) {
+      content = content.substring(1)
+    } else if (content.startsWith(". ")) {
+      content = content.substring(2)
+    }
+
     chunks.push({
-      content: doc.pageContent,
-      tokens: encode(doc.pageContent).length
+      content: content,
+      tokens: encode(content).length
     })
   }
 

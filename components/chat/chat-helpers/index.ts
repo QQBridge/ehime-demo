@@ -1,16 +1,16 @@
 // Only used in use-chat-handler.tsx to keep it clean
 
-import { createChatFiles } from "@/db/chat-files"
-import { createChat } from "@/db/chats"
-import { createMessageFileItems } from "@/db/message-file-items"
-import { createMessages, updateMessage } from "@/db/messages"
-import { uploadMessageImage } from "@/db/storage/message-images"
+//import { createChatFiles } from "@/db/chat-files"
+import {createChat} from "@/db/chats"
+import {createMessageFileItems} from "@/db/message-file-items"
+import {createMessages, updateMessage} from "@/db/messages"
+import {uploadMessageImage} from "@/db/storage/message-images"
 import {
   buildFinalMessages,
   adaptMessagesForGoogleGemini
 } from "@/lib/build-prompt"
-import { consumeReadableStream } from "@/lib/consume-stream"
-import { Tables, TablesInsert } from "@/supabase/types"
+import {consumeReadableStream} from "@/lib/consume-stream"
+import {Tables, TablesInsert} from "@/supabase/types"
 import {
   ChatFile,
   ChatMessage,
@@ -20,8 +20,8 @@ import {
   MessageImage
 } from "@/types"
 import React from "react"
-import { toast } from "sonner"
-import { v4 as uuidv4 } from "uuid"
+import {toast} from "sonner"
+import {v4 as uuidv4} from "uuid"
 
 export const validateChatSettings = (
   chatSettings: ChatSettings | null,
@@ -72,7 +72,7 @@ export const handleRetrieval = async (
     console.error("Error retrieving:", response)
   }
 
-  const { results } = (await response.json()) as {
+  const {results} = (await response.json()) as {
     results: Tables<"file_items">[]
   }
 
@@ -208,9 +208,12 @@ export const handleHostedChat = async (
 
   let draftMessages = await buildFinalMessages(payload, profile, chatImages)
 
-  let formattedMessages : any[] = []
+  let formattedMessages: any[] = []
   if (provider === "google") {
-    formattedMessages = await adaptMessagesForGoogleGemini(payload, draftMessages)
+    formattedMessages = await adaptMessagesForGoogleGemini(
+      payload,
+      draftMessages
+    )
   } else {
     formattedMessages = draftMessages
   }
@@ -301,16 +304,16 @@ export const processResponse = async (
           contentToAdd = isHosted
             ? chunk
             : // Ollama's streaming endpoint returns new-line separated JSON
-              // objects. A chunk may have more than one of these objects, so we
-              // need to split the chunk by new-lines and handle each one
-              // separately.
-              chunk
-                .trimEnd()
-                .split("\n")
-                .reduce(
-                  (acc, line) => acc + JSON.parse(line).message.content,
-                  ""
-                )
+            // objects. A chunk may have more than one of these objects, so we
+            // need to split the chunk by new-lines and handle each one
+            // separately.
+            chunk
+              .trimEnd()
+              .split("\n")
+              .reduce(
+                (acc, line) => acc + JSON.parse(line).message.content,
+                ""
+              )
           fullText += contentToAdd
         } catch (error) {
           console.error("Error parsing JSON:", error)
@@ -349,10 +352,10 @@ export const handleCreateChat = async (
   selectedWorkspace: Tables<"workspaces">,
   messageContent: string,
   selectedAssistant: Tables<"assistants">,
-  newMessageFiles: ChatFile[],
+  //newMessageFiles: ChatFile[],
   setSelectedChat: React.Dispatch<React.SetStateAction<Tables<"chats"> | null>>,
   setChats: React.Dispatch<React.SetStateAction<Tables<"chats">[]>>,
-  setChatFiles: React.Dispatch<React.SetStateAction<ChatFile[]>>
+  //setChatFiles: React.Dispatch<React.SetStateAction<ChatFile[]>>
 ) => {
   const createdChat = await createChat({
     user_id: profile.user_id,
@@ -370,16 +373,6 @@ export const handleCreateChat = async (
 
   setSelectedChat(createdChat)
   setChats(chats => [createdChat, ...chats])
-
-  await createChatFiles(
-    newMessageFiles.map(file => ({
-      user_id: profile.user_id,
-      chat_id: createdChat.id,
-      file_id: file.id
-    }))
-  )
-
-  setChatFiles(prev => [...prev, ...newMessageFiles])
 
   return createdChat
 }
@@ -448,9 +441,8 @@ export const handleCreateMessages = async (
     const uploadPromises = newMessageImages
       .filter(obj => obj.file !== null)
       .map(obj => {
-        let filePath = `${profile.user_id}/${currentChat.id}/${
-          createdMessages[0].id
-        }/${uuidv4()}`
+        let filePath = `${profile.user_id}/${currentChat.id}/${createdMessages[0].id
+          }/${uuidv4()}`
 
         return uploadMessageImage(filePath, obj.file as File).catch(error => {
           console.error(`Failed to upload image at ${filePath}:`, error)
@@ -476,7 +468,7 @@ export const handleCreateMessages = async (
       image_paths: paths
     })
 
-    const createdMessageFileItems = await createMessageFileItems(
+    await createMessageFileItems(
       retrievedFileItems.map(fileItem => {
         return {
           user_id: profile.user_id,
