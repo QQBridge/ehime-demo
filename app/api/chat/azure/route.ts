@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         DEPLOYMENT_ID = profile.azure_openai_45_vision_id || ""
         break
       case "gpt-4o":
-        DEPLOYMENT_ID = "gpt-4o"
+        DEPLOYMENT_ID = profile.azure_openai_45_vision_id || ""
         break
       default:
         return new Response(JSON.stringify({ message: "Model not found" }), {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const azureOpenai = new OpenAI({
       apiKey: KEY,
       baseURL: `${ENDPOINT}/openai/deployments/${DEPLOYMENT_ID}`,
-      defaultQuery: { "api-version": "2023-12-01-preview" },
+      defaultQuery: { "api-version": "2024-06-01" },
       defaultHeaders: { "api-key": KEY }
     })
 
