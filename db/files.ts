@@ -145,7 +145,7 @@ export const createFile = async (
     console.error(
       `Error processing file:${createdFile.id}, status:${response.status}, response:${json.message}`
     )
-    toast.error("Failed to process file. Reason:" + json.message, {
+    toast.error("ファイルのアップロードに失敗しました。理由: " + json.message, {
       duration: 10000
     })
     await deleteFile(createdFile.id)
