@@ -223,7 +223,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
                 if (!e.target.files) return
                 handleSelectDeviceFile(e.target.files[0])
               }}
-              accept={filesToAccept}
+              accept={filesToAccept.join(",")}
             />
           </div>
           <div className="truncate text-sm font-bold text-white">

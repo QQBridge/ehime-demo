@@ -13,7 +13,7 @@ export const ACCEPTED_FILE_TYPES = [
   "text/markdown",
   "application/pdf",
   "text/plain"
-].join(",")
+]
 
 export const useSelectFileHandler = () => {
   const {
@@ -43,7 +43,7 @@ export const useSelectFileHandler = () => {
 
     setFilesToAccept(
       FULL_MODEL.imageInput
-        ? `${ACCEPTED_FILE_TYPES},image/*`
+        ? [...ACCEPTED_FILE_TYPES, "image/png", "image/jpeg"]
         : ACCEPTED_FILE_TYPES
     )
   }
@@ -61,7 +61,7 @@ export const useSelectFileHandler = () => {
 
       if (file.type.includes("image")) {
         reader.readAsDataURL(file)
-      } else if (ACCEPTED_FILE_TYPES.split(",").includes(file.type)) {
+      } else if (ACCEPTED_FILE_TYPES.includes(file.type)) {
         if (simplifiedFileType.includes("vnd.adobe.pdf")) {
           simplifiedFileType = "pdf"
         } else if (
