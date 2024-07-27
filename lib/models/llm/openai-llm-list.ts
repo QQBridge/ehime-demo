@@ -9,7 +9,7 @@ const GPT4o: LLM = {
   provider: "openai",
   hostedId: "gpt-4o",
   platformLink: OPENAI_PLATORM_LINK,
-  imageInput: true,
+  imageInput: false,
   pricing: {
     currency: "USD",
     unit: "1M tokens",
@@ -82,7 +82,7 @@ const GPT3_5Turbo: LLM = {
 }
 
 export const OPENAI_LLM_LIST: LLM[] = [
-  // GPT4o,
+  GPT4o,
   //GPT4Turbo,
   GPT4Vision
   //GPT4,
