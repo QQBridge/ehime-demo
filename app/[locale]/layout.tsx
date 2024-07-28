@@ -12,10 +12,10 @@ import { ReactNode } from "react"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
-const APP_NAME = "QQAICEチャットデモ"
-const APP_DEFAULT_TITLE = "QQAICEチャットデモ"
-const APP_TITLE_TEMPLATE = "%s - QQAICE"
-const APP_DESCRIPTION = "QQとAICEで共同開発した高性能チャットボットのデモです。"
+const APP_NAME = "Ehime Smart Chat"
+const APP_DEFAULT_TITLE = "Ehime Smart Chat"
+const APP_TITLE_TEMPLATE = "%s - Ehime Smart Chat"
+const APP_DESCRIPTION = "Ehime Smart Chat"
 
 interface RootLayoutProps {
   children: ReactNode
