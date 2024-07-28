@@ -227,7 +227,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
               <div className="overflow-hidden text-ellipsis">
                 {selectedPreset?.name ||
                   selectedAssistant?.name ||
-                  t("デフォルト生成AI(GPT-4o)")}
+                  t("デフォルトチャット")}
               </div>
 
               <IconChevronDown className="ml-1" />
