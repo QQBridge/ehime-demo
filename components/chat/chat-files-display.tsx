@@ -17,7 +17,7 @@ import {
   IconCirclePlus
 } from "@tabler/icons-react"
 import Image from "next/image"
-import { FC, useContext, useState, useRef } from "react"
+import { FC, useContext, useState, useRef, useEffect } from "react"
 //import {Button} from "../ui/button"
 import { FilePreview } from "../ui/file-preview"
 import { WithTooltip } from "../ui/with-tooltip"
@@ -43,8 +43,14 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
     chatImages,
     setChatImages,
     setChatFiles,
-    setUseRetrieval
+    setUseRetrieval,
+    selectedChat
   } = useContext(ChatbotUIContext)
+
+  useEffect(() => {
+    setNewMessageFiles([]);
+    setNewMessageImages([]);
+  }, [selectedChat]);
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { filesToAccept, handleSelectDeviceFile } = useSelectFileHandler()
