@@ -11,7 +11,7 @@ import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 import useHotkey from "@/lib/hooks/use-hotkey"
 import { LLMID, MessageImage } from "@/types"
 import { useParams } from "next/navigation"
-import { FC, useContext, useEffect, useState } from "react"
+import { FC, useContext, useEffect, useState, useRef } from "react"
 //import {ChatHelp} from "./chat-help"
 import { useScroll } from "./chat-hooks/use-scroll"
 import { ChatInput } from "./chat-input"
@@ -27,6 +27,7 @@ interface ChatUIProps {}
 export const ChatUI: FC<ChatUIProps> = ({}) => {
   useHotkey("o", () => handleNewChat())
 
+  const prevAssistantIdRef = useRef<string | null | undefined>(undefined)
   const router = useRouter()
   const params = useParams()
 
@@ -36,6 +37,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
     setChatMessages,
     selectedChat,
     setSelectedChat,
+    chatSettings,
     setChatSettings,
     setChatImages,
     assistants,
@@ -73,7 +75,13 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
       setIsAtBottom(true)
     }
 
-    if (params.chatid) {
+    const prevAssistantId = prevAssistantIdRef.current
+    console.log(prevAssistantId)
+    if (
+      params.chatid &&
+      (prevAssistantId === undefined ||
+        prevAssistantId === selectedAssistant?.id)
+    ) {
       fetchData().then(() => {
         handleFocusChatInput()
         setLoading(false)
@@ -88,7 +96,8 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
     } else {
       handleNewChat().then(() => setLoading(false))
     }
-  }, [])
+    prevAssistantIdRef.current = selectedAssistant?.id ?? null
+  }, [selectedAssistant?.id])
 
   const fetchMessages = async () => {
     const fetchedMessages = await getMessagesByChatId(params.chatid as string)
@@ -192,7 +201,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
       includeProfileContext: chat.include_profile_context,
       includeWorkspaceInstructions: chat.include_workspace_instructions,
       embeddingsProvider: chat.embeddings_provider as "openai" | "local",
-      enabledFiles: chat.assistants?.enabled_files ?? false
+      enabledFiles: chat.assistants?.enabled_files ?? !chat.assistant_id
     })
   }
 
@@ -234,7 +243,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
       </div>
       */}
       </div>
-      {selectedAssistant?.enabled_files && <ChatFilesDisplay />}
+      {chatSettings?.enabledFiles && <ChatFilesDisplay />}
     </div>
   )
 }

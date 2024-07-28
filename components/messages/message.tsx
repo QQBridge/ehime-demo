@@ -262,9 +262,7 @@ export const Message: FC<MessageProps> = ({
                     ? assistants.find(
                         assistant => assistant.id === message.assistant_id
                       )?.name
-                    : selectedAssistant
-                      ? selectedAssistant?.name
-                      : MODEL_DATA?.modelName
+                    : "デフォルトチャットAI"
                   : profile?.display_name ?? profile?.username}
               </div>
             </div>
