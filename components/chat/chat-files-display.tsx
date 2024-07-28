@@ -48,9 +48,9 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
   } = useContext(ChatbotUIContext)
 
   useEffect(() => {
-    setNewMessageFiles([]);
-    setNewMessageImages([]);
-  }, [selectedChat]);
+    setNewMessageFiles([])
+    setNewMessageImages([])
+  }, [selectedChat])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { filesToAccept, handleSelectDeviceFile } = useSelectFileHandler()
@@ -199,18 +199,18 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
                 <div className="truncate">{file.name}</div>
               </div>
 
-              {newMessageFiles.some(f => f.id === file.id) && (
-                <IconX
-                  className="bg-muted-foreground border-primary absolute right-[-6px] top-[-6px] flex size-5 cursor-pointer items-center justify-center rounded-full border-DEFAULT text-[10px] hover:border-red-500 hover:bg-white hover:text-red-500"
-                  onClick={e => {
-                    e.stopPropagation()
-                    setNewMessageFiles(
-                      newMessageFiles.filter(f => f.id !== file.id)
-                    )
-                    setChatFiles(chatFiles.filter(f => f.id !== file.id))
-                  }}
-                />
-              )}
+              {/* {newMessageFiles.some(f => f.id === file.id) && ( */}
+              <IconX
+                className="bg-muted-foreground border-primary absolute right-[-6px] top-[-6px] flex size-5 cursor-pointer items-center justify-center rounded-full border-DEFAULT text-[10px] hover:border-red-500 hover:bg-white hover:text-red-500"
+                onClick={e => {
+                  e.stopPropagation()
+                  setNewMessageFiles(
+                    newMessageFiles.filter(f => f.id !== file.id)
+                  )
+                  setChatFiles(chatFiles.filter(f => f.id !== file.id))
+                }}
+              />
+              {/* )} 一旦GPTsでファイル登録する場合までコメントアウトしとく */}
             </div>
           )
         )}
