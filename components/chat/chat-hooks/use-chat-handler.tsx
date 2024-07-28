@@ -111,7 +111,8 @@ export const useChatHandler = () => {
           selectedAssistant.include_workspace_instructions,
         embeddingsProvider: selectedAssistant.embeddings_provider as
           | "openai"
-          | "local"
+          | "local",
+        enabledFiles: selectedAssistant.enabled_files
       })
 
       let allFiles = []
@@ -155,7 +156,8 @@ export const useChatHandler = () => {
           selectedPreset.include_workspace_instructions,
         embeddingsProvider: selectedPreset.embeddings_provider as
           | "openai"
-          | "local"
+          | "local",
+          enabledFiles: false
       })
     } else if (selectedWorkspace) {
       // setChatSettings({
