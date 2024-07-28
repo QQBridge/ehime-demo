@@ -4,7 +4,14 @@ import { TablesInsert, TablesUpdate } from "@/supabase/types"
 export const getChatById = async (chatId: string) => {
   const { data: chat } = await supabase
     .from("chats")
-    .select("*")
+    .select(
+      `
+      *,
+      assistants (
+        enabled_files
+      )
+    `
+    )
     .eq("id", chatId)
     .maybeSingle()
 
@@ -14,7 +21,14 @@ export const getChatById = async (chatId: string) => {
 export const getChatsByWorkspaceId = async (workspaceId: string) => {
   const { data: chats, error } = await supabase
     .from("chats")
-    .select("*")
+    .select(
+      `
+      *,
+      assistants (
+        enabled_files
+      )
+    `
+    )
     .eq("workspace_id", workspaceId)
     .order("created_at", { ascending: false })
 
@@ -29,7 +43,14 @@ export const createChat = async (chat: TablesInsert<"chats">) => {
   const { data: createdChat, error } = await supabase
     .from("chats")
     .insert([chat])
-    .select("*")
+    .select(
+      `
+      *,
+      assistants (
+        enabled_files
+      )
+    `
+    )
     .single()
 
   if (error) {
@@ -43,7 +64,14 @@ export const createChats = async (chats: TablesInsert<"chats">[]) => {
   const { data: createdChats, error } = await supabase
     .from("chats")
     .insert(chats)
-    .select("*")
+    .select(
+      `
+      *,
+      assistants (
+        enabled_files
+      )
+    `
+    )
 
   if (error) {
     throw new Error(error.message)
@@ -60,7 +88,14 @@ export const updateChat = async (
     .from("chats")
     .update(chat)
     .eq("id", chatId)
-    .select("*")
+    .select(
+      `
+      *,
+      assistants (
+        enabled_files
+      )
+    `
+    )
     .single()
 
   if (error) {

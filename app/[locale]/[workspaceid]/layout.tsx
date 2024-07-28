@@ -187,7 +187,8 @@ export default function WorkspaceLayout({children}: WorkspaceLayoutProps) {
       includeWorkspaceInstructions:
         workspace?.include_workspace_instructions || false,
       embeddingsProvider:
-        (workspace?.embeddings_provider as "openai" | "local") || "openai"
+        (workspace?.embeddings_provider as "openai" | "local") || "openai",
+      enabledFiles: false
     })
 
     setLoading(false)
