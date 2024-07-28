@@ -45,7 +45,7 @@ export async function buildFinalMessages(
   } = payload
 
   const BUILT_PROMPT = buildBasePrompt(
-    chatSettings.prompt,
+    assistant?.prompt ?? chatSettings.prompt,
     chatSettings.includeProfileContext ? profile.profile_context || "" : "",
     chatSettings.includeWorkspaceInstructions ? workspaceInstructions : "",
     assistant

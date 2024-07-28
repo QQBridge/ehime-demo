@@ -96,7 +96,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
     } else {
       handleNewChat().then(() => setLoading(false))
     }
-    prevAssistantIdRef.current = selectedAssistant?.id ?? null
+    prevAssistantIdRef.current = selectedAssistant?.id
   }, [selectedAssistant?.id])
 
   const fetchMessages = async () => {
