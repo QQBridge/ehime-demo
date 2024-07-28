@@ -172,6 +172,11 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       contentType: "assistants"
     }))
   ]
+  const uniqueItems = Array.from(new Set(items.map(item => item.id))).map(
+    id => {
+      return items.find(item => item.id === id)!
+    }
+  )
 
   const selectedAssistantImage = selectedPreset
     ? ""
@@ -270,7 +275,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
               />
             )}
 
-            {items
+            {uniqueItems
               .filter(
                 item =>
                   item.name.toLowerCase().includes(search.toLowerCase()) &&
