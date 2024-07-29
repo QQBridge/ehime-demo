@@ -228,7 +228,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
           {loading ? (
             <div className="animate-pulse">Loading assistant...</div>
           ) : (
-            <div className="flex w-full justify-between">
+            <div className="flex justify-between w-10/12 max-w-48">
               <div className="overflow-hidden text-ellipsis">
                 {selectedPreset?.name ||
                   selectedAssistant?.name ||
