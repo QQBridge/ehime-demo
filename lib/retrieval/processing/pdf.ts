@@ -9,6 +9,10 @@ export const processPdf = async (pdf: Blob): Promise<FileItemChunk[]> => {
   const docs = await loader.load()
   let completeText = docs.map(doc => doc.pageContent).join(" ")
 
+  if (!docs.some(doc => doc.pageContent !== "")) {
+    completeText = "物件情報"
+  }
+
   const splitter = new RecursiveCharacterTextSplitter({
     separators: ["。", ". "],
     chunkSize: CHUNK_SIZE,
