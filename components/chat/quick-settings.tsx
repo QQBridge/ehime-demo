@@ -62,7 +62,6 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
     item: Tables<"presets"> | Tables<"assistants"> | null,
     contentType: "presets" | "assistants" | "remove"
   ) => {
-    console.log({ item, contentType })
     if (contentType === "assistants" && item) {
       setSelectedAssistant(item as Tables<"assistants">)
       setLoading(true)
@@ -115,7 +114,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
           embeddingsProvider: selectedWorkspace.embeddings_provider as
             | "openai"
             | "local",
-          enabledFiles: false
+          enabledFiles: true
         })
       }
       return
@@ -201,14 +200,6 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
           variant="ghost"
           className="text-md flex justify-start space-x-3 border border-black"
         >
-          {selectedPreset && (
-            <ModelIcon
-              provider={modelDetails?.provider || "custom"}
-              width={32}
-              height={32}
-            />
-          )}
-
           {selectedAssistant &&
             (selectedAssistantImage ? (
               <Image
@@ -224,7 +215,6 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                 size={28}
               />
             ))}
-
           {loading ? (
             <div className="animate-pulse">Loading assistant...</div>
           ) : (
