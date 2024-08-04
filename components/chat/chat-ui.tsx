@@ -201,7 +201,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
     return <Loading />
   }
 
-  return (
+  return selectedAssistant ? (
     <div className="relative flex size-full">
       <div className="relative flex size-full grow flex-col items-center">
         {/*
@@ -237,5 +237,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
       </div>
       {chatSettings?.enabledFiles && <ChatFilesDisplay />}
     </div>
+  ) : (
+    <></>
   )
 }

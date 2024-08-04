@@ -161,7 +161,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     }
   }
 
-  return (
+  return selectedAssistant ? (
     <>
       <div className="flex flex-col flex-wrap justify-center gap-2">
         {selectedTools &&
@@ -212,7 +212,6 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
         <div className="absolute bottom-[76px] left-0 max-h-[300px] w-full overflow-auto rounded-xl dark:border-none">
           <ChatCommandInput />
         </div>
-
         <>
           {chatSettings?.enabledFiles && (
             <IconCirclePlus
@@ -276,5 +275,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
         </div>
       </div>
     </>
+  ) : (
+    <></>
   )
 }

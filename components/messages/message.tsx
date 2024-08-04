@@ -192,7 +192,7 @@ export const Message: FC<MessageProps> = ({
       onMouseLeave={() => setIsHovering(false)}
       onKeyDown={handleKeyDown}
     >
-      <div className="relative flex w-full flex-col p-6 sm:px-0 xl:w-[700px]">
+      <div className="relative flex w-full flex-col p-6 sm:px-0 xl:w-[700px] mx-4">
         <div className="absolute right-5 top-7 sm:right-0">
           <MessageActions
             onCopy={handleCopy}

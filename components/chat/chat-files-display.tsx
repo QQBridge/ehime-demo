@@ -44,7 +44,8 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
     setChatImages,
     setChatFiles,
     setUseRetrieval,
-    selectedChat
+    selectedChat,
+    selectedAssistant
   } = useContext(ChatbotUIContext)
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
     window.open(link, "_blank")
   }
 
-  return (
+  return selectedAssistant ? (
     <>
       {showPreview && selectedImage && (
         <FilePreview
@@ -139,11 +140,9 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
               onClick={e => {
                 e.stopPropagation()
                 setNewMessageImages(
-                  newMessageImages.filter(f => f.messageId !== image.messageId)
+                  newMessageImages.filter(f => f.url !== image.url)
                 )
-                setChatImages(
-                  chatImages.filter(f => f.messageId !== image.messageId)
-                )
+                setChatImages(chatImages.filter(f => f.url !== image.url))
               }}
             />
           </div>
@@ -238,6 +237,8 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
         </div>
       </div>
     </>
+  ) : (
+    <></>
   )
 }
 
