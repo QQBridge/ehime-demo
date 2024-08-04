@@ -1,16 +1,16 @@
-import {ChatbotUIContext} from "@/context/context"
-import {getAssistantCollectionsByAssistantId} from "@/db/assistant-collections"
-import {getAssistantFilesByAssistantId} from "@/db/assistant-files"
-import {getAssistantToolsByAssistantId} from "@/db/assistant-tools"
-import {updateChat} from "@/db/chats"
-import {getCollectionFilesByCollectionId} from "@/db/collection-files"
-import {deleteMessagesIncludingAndAfter} from "@/db/messages"
-import {buildFinalMessages} from "@/lib/build-prompt"
-import {Tables} from "@/supabase/types"
-import {ChatMessage, ChatPayload, LLMID, ModelProvider} from "@/types"
-import {useRouter} from "next/navigation"
-import {useContext, useEffect, useRef} from "react"
-import {LLM_LIST} from "../../../lib/models/llm/llm-list"
+import { ChatbotUIContext } from "@/context/context"
+import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
+import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
+import { getAssistantToolsByAssistantId } from "@/db/assistant-tools"
+import { updateChat } from "@/db/chats"
+import { getCollectionFilesByCollectionId } from "@/db/collection-files"
+import { deleteMessagesIncludingAndAfter } from "@/db/messages"
+import { buildFinalMessages } from "@/lib/build-prompt"
+import { Tables } from "@/supabase/types"
+import { ChatMessage, ChatPayload, LLMID, ModelProvider } from "@/types"
+import { useRouter } from "next/navigation"
+import { useContext, useEffect, useRef } from "react"
+import { LLM_LIST } from "../../../lib/models/llm/llm-list"
 import {
   createTempMessages,
   handleCreateChat,
@@ -22,6 +22,7 @@ import {
   validateChatSettings
 } from "../chat-helpers"
 import type { ChatFile } from "@/types"
+import { Assistant } from "openai/resources/beta/assistants/assistants.mjs"
 
 export const useChatHandler = () => {
   const router = useRouter()
@@ -78,7 +79,7 @@ export const useChatHandler = () => {
     }
   }, [isPromptPickerOpen, isFilePickerOpen, isToolPickerOpen])
 
-  const handleNewChat = async () => {
+  const handleNewChat = async (chatAssistant?: Tables<"assistants">) => {
     if (!selectedWorkspace) return
 
     setUserInput("")
@@ -100,29 +101,31 @@ export const useChatHandler = () => {
     setSelectedTools([])
     setToolInUse("none")
 
-    if (selectedAssistant) {
+    let assistant = selectedAssistant
+    if (chatAssistant) {
+      assistant = chatAssistant
+    }
+
+    if (assistant) {
       setChatSettings({
-        model: selectedAssistant.model as LLMID,
-        prompt: selectedAssistant.prompt,
-        temperature: selectedAssistant.temperature,
-        contextLength: selectedAssistant.context_length,
-        includeProfileContext: selectedAssistant.include_profile_context,
-        includeWorkspaceInstructions:
-          selectedAssistant.include_workspace_instructions,
-        embeddingsProvider: selectedAssistant.embeddings_provider as
-          | "openai"
-          | "local",
-        enabledFiles: selectedAssistant.enabled_files
+        model: assistant.model as LLMID,
+        prompt: assistant.prompt,
+        temperature: assistant.temperature,
+        contextLength: assistant.context_length,
+        includeProfileContext: assistant.include_profile_context,
+        includeWorkspaceInstructions: assistant.include_workspace_instructions,
+        embeddingsProvider: assistant.embeddings_provider as "openai" | "local",
+        enabledFiles: assistant.enabled_files
       })
 
       let allFiles = []
 
       const assistantFiles = (
-        await getAssistantFilesByAssistantId(selectedAssistant.id)
+        await getAssistantFilesByAssistantId(assistant.id)
       ).files
       allFiles = [...assistantFiles]
       const assistantCollections = (
-        await getAssistantCollectionsByAssistantId(selectedAssistant.id)
+        await getAssistantCollectionsByAssistantId(assistant.id)
       ).collections
       for (const collection of assistantCollections) {
         const collectionFiles = (
@@ -131,7 +134,7 @@ export const useChatHandler = () => {
         allFiles = [...allFiles, ...collectionFiles]
       }
       const assistantTools = (
-        await getAssistantToolsByAssistantId(selectedAssistant.id)
+        await getAssistantToolsByAssistantId(assistant.id)
       ).tools
 
       setSelectedTools(assistantTools)
@@ -157,7 +160,7 @@ export const useChatHandler = () => {
         embeddingsProvider: selectedPreset.embeddings_provider as
           | "openai"
           | "local",
-          enabledFiles: false
+        enabledFiles: false
       })
     } else if (selectedWorkspace) {
       // setChatSettings({
@@ -182,10 +185,10 @@ export const useChatHandler = () => {
       profile!,
       selectedWorkspace!,
       "新しいチャット",
-      selectedAssistant!,
+      assistant!,
       //newMessageFiles,
       setSelectedChat,
-      setChats,
+      setChats
       //setChatFiles
     )
     return router.push(`/${selectedWorkspace.id}/chat/${newChat.id}`)
@@ -240,14 +243,14 @@ export const useChatHandler = () => {
         messageContent
       )
 
-      let currentChat = {...selectedChat!}
+      let currentChat = { ...selectedChat! }
 
       const b64Images = newMessageImages.map(image => image.base64)
 
       let retrievedFileItems: Tables<"file_items">[] = []
 
-      let allFiles: Array<{id: string, name: string, type: string}> = []
-        if (selectedAssistant) {
+      let allFiles: Array<{ id: string; name: string; type: string }> = []
+      if (selectedAssistant) {
         const assistantFiles = (
           await getAssistantFilesByAssistantId(selectedAssistant.id)
         ).files
@@ -263,21 +266,26 @@ export const useChatHandler = () => {
         }
       }
       if (
-        (newMessageFiles.length > 0 || chatFiles.length > 0 || allFiles.length > 0) &&
+        (newMessageFiles.length > 0 ||
+          chatFiles.length > 0 ||
+          allFiles.length > 0) &&
         useRetrieval
       ) {
         setToolInUse("retrieval")
-        
+
         retrievedFileItems = await handleRetrieval(
           userInput,
           newMessageFiles,
-          [...allFiles.map(element => ({...element, file: null})), ...chatFiles],
+          [
+            ...allFiles.map(element => ({ ...element, file: null })),
+            ...chatFiles
+          ],
           chatSettings!.embeddingsProvider,
           sourceCount
         )
       }
 
-      const {tempUserChatMessage, tempAssistantChatMessage} =
+      const { tempUserChatMessage, tempAssistantChatMessage } =
         createTempMessages(
           messageContent,
           chatMessages,

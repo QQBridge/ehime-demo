@@ -27,7 +27,6 @@ interface ChatUIProps {}
 export const ChatUI: FC<ChatUIProps> = ({}) => {
   useHotkey("o", () => handleNewChat())
 
-  const prevAssistantIdRef = useRef<string | null | undefined>(undefined)
   const router = useRouter()
   const params = useParams()
 
@@ -75,13 +74,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
       setIsAtBottom(true)
     }
 
-    const prevAssistantId = prevAssistantIdRef.current
-    console.log(prevAssistantId)
-    if (
-      params.chatid &&
-      (prevAssistantId === undefined ||
-        prevAssistantId === selectedAssistant?.id)
-    ) {
+    if (params.chatid) {
       fetchData().then(() => {
         handleFocusChatInput()
         setLoading(false)
@@ -96,8 +89,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
     } else {
       handleNewChat().then(() => setLoading(false))
     }
-    prevAssistantIdRef.current = selectedAssistant?.id
-  }, [selectedAssistant?.id])
+  }, [])
 
   const fetchMessages = async () => {
     const fetchedMessages = await getMessagesByChatId(params.chatid as string)
@@ -234,7 +226,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="relative w-full min-w-[300px] items-end px-2 pb-3 pt-0 sm:w-[600px] sm:pb-8 sm:pt-5 md:w-[700px] lg:w-[700px] xl:w-[800px]">
+        <div className="relative w-full min-w-[300px] items-end px-2 pb-3 pt-0 sm:pb-8 sm:pt-5 xl:w-[800px]">
           <ChatInput />
         </div>
         {/*
