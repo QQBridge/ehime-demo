@@ -8,9 +8,11 @@ import { LLM } from "@/types"
 import { IconRobotFace } from "@tabler/icons-react"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
-import { FC, useContext, useRef } from "react"
+import { FC, useContext, useEffect, useRef, useState } from "react"
 import { DeleteChat } from "./delete-chat"
 import { UpdateChat } from "./update-chat"
+import { getAssistantImageFromStorage } from "@/db/storage/assistant-images"
+import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 
 interface ChatItemProps {
   chat: Tables<"chats">
@@ -20,10 +22,29 @@ export const ChatItem: FC<ChatItemProps> = ({ chat }) => {
   const {
     selectedWorkspace,
     selectedChat,
+    assistants,
     availableLocalModels,
-    assistantImages,
     availableOpenRouterModels
   } = useContext(ChatbotUIContext)
+  const [imageBase, setImageBase] = useState("")
+
+  const fetchAssistantImage = async () => {
+    const assistant = assistants.find(a => a.id === chat.assistant_id)
+    if (assistant) {
+      const url =
+        (await getAssistantImageFromStorage(assistant.image_path)) || ""
+      if (url) {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const base64 = await convertBlobToBase64(blob)
+        setImageBase(base64)
+      }
+    }
+  }
+
+  useEffect(() => {
+    fetchAssistantImage()
+  }, [])
 
   const router = useRouter()
   const params = useParams()
@@ -49,10 +70,6 @@ export const ChatItem: FC<ChatItemProps> = ({ chat }) => {
     ...availableOpenRouterModels
   ].find(llm => llm.modelId === chat.model) as LLM
 
-  const assistantImage = assistantImages.find(
-    image => image.assistantId === chat.assistant_id
-  )?.base64
-
   return (
     <div
       ref={itemRef}
@@ -65,14 +82,15 @@ export const ChatItem: FC<ChatItemProps> = ({ chat }) => {
       onClick={handleClick}
     >
       {chat.assistant_id ? (
-        assistantImage ? (
+        imageBase ? (
           <Image
             style={{ width: "30px", height: "30px" }}
             className="rounded"
-            src={assistantImage}
+            src={imageBase}
             alt="Assistant image"
             width={30}
             height={30}
+            loading="lazy"
           />
         ) : (
           <IconRobotFace

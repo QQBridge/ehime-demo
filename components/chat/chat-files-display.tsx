@@ -54,7 +54,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
   }, [selectedChat])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { filesToAccept, handleSelectDeviceFile } = useSelectFileHandler()
+  const { filesToAccept, handleSelectDeviceFiles } = useSelectFileHandler()
   const [selectedFile, setSelectedFile] = useState<ChatFile | null>(null)
   const [selectedImage, setSelectedImage] = useState<MessageImage | null>(null)
   const [showPreview, setShowPreview] = useState(false)
@@ -133,6 +133,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
                 setSelectedImage(image)
                 setShowPreview(true)
               }}
+              loading="lazy"
             />
 
             <IconX
@@ -226,7 +227,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
               type="file"
               onChange={e => {
                 if (!e.target.files) return
-                handleSelectDeviceFile(e.target.files[0])
+                handleSelectDeviceFiles(e.target.files)
               }}
               accept={filesToAccept.join(",")}
             />

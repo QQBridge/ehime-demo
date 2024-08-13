@@ -1,5 +1,4 @@
 import { ChatbotUIContext } from "@/context/context"
-import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
 import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
 import { getAssistantToolsByAssistantId } from "@/db/assistant-tools"
 import { updateChat } from "@/db/chats"
@@ -118,36 +117,8 @@ export const useChatHandler = () => {
         enabledFiles: assistant.enabled_files
       })
 
-      let allFiles = []
-
-      const assistantFiles = (
-        await getAssistantFilesByAssistantId(assistant.id)
-      ).files
-      allFiles = [...assistantFiles]
-      const assistantCollections = (
-        await getAssistantCollectionsByAssistantId(assistant.id)
-      ).collections
-      for (const collection of assistantCollections) {
-        const collectionFiles = (
-          await getCollectionFilesByCollectionId(collection.id)
-        ).files
-        allFiles = [...allFiles, ...collectionFiles]
-      }
-      const assistantTools = (
-        await getAssistantToolsByAssistantId(assistant.id)
-      ).tools
-
-      setSelectedTools(assistantTools)
-      setChatFiles(
-        allFiles.map(file => ({
-          id: file.id,
-          name: file.name,
-          type: file.type,
-          file: null
-        }))
-      )
-
-      if (allFiles.length > 0) setShowFilesDisplay(true)
+      setSelectedTools([])
+      setChatFiles([])
     } else if (selectedPreset) {
       setChatSettings({
         model: selectedPreset.model as LLMID,
@@ -249,26 +220,8 @@ export const useChatHandler = () => {
 
       let retrievedFileItems: Tables<"file_items">[] = []
 
-      let allFiles: Array<{ id: string; name: string; type: string }> = []
-      if (selectedAssistant) {
-        const assistantFiles = (
-          await getAssistantFilesByAssistantId(selectedAssistant.id)
-        ).files
-        allFiles = [...assistantFiles]
-        const assistantCollections = (
-          await getAssistantCollectionsByAssistantId(selectedAssistant.id)
-        ).collections
-        for (const collection of assistantCollections) {
-          const collectionFiles = (
-            await getCollectionFilesByCollectionId(collection.id)
-          ).files
-          allFiles = [...allFiles, ...collectionFiles]
-        }
-      }
       if (
-        (newMessageFiles.length > 0 ||
-          chatFiles.length > 0 ||
-          allFiles.length > 0) &&
+        (newMessageFiles.length > 0 || chatFiles.length > 0) &&
         useRetrieval
       ) {
         setToolInUse("retrieval")
@@ -276,10 +229,7 @@ export const useChatHandler = () => {
         retrievedFileItems = await handleRetrieval(
           userInput,
           newMessageFiles,
-          [
-            ...allFiles.map(element => ({ ...element, file: null })),
-            ...chatFiles
-          ],
+          chatFiles,
           chatSettings!.embeddingsProvider,
           sourceCount
         )

@@ -2,25 +2,46 @@ import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { Tables } from "@/supabase/types"
 import { IconCircleCheckFilled, IconRobotFace } from "@tabler/icons-react"
 import Image from "next/image"
-import { FC } from "react"
+import { FC, useState, useEffect } from "react"
 import { ModelIcon } from "../models/model-icon"
 import { DropdownMenuItem } from "../ui/dropdown-menu"
+import { getAssistantImageFromStorage } from "@/db/storage/assistant-images"
+import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 
 interface QuickSettingOptionProps {
   contentType: "presets" | "assistants"
   isSelected: boolean
   item: Tables<"presets"> | Tables<"assistants">
   onSelect: () => void
-  image: string
 }
 
 export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
   contentType,
   isSelected,
   item,
-  onSelect,
-  image
+  onSelect
 }) => {
+  const [imageBase, setImageBase] = useState("")
+
+  const fetchAssistantImage = async () => {
+    if (contentType === "assistants") {
+      const assistant = item as Tables<"assistants">
+      const url =
+        (await getAssistantImageFromStorage(assistant.image_path)) || ""
+      if (url) {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const base64 = await convertBlobToBase64(blob)
+        setImageBase(base64)
+      }
+    } else {
+      setImageBase("")
+    }
+  }
+
+  useEffect(() => {
+    fetchAssistantImage()
+  }, [])
   const modelDetails = LLM_LIST.find(model => model.modelId === item.model)
 
   return (
@@ -36,14 +57,15 @@ export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
             width={32}
             height={32}
           />
-        ) : image ? (
+        ) : imageBase ? (
           <Image
             style={{ width: "32px", height: "32px" }}
             className="rounded"
-            src={image}
+            src={imageBase}
             alt="Assistant"
             width={32}
             height={32}
+            loading="lazy"
           />
         ) : (
           <IconRobotFace

@@ -27,7 +27,7 @@ export const Dashboard: FC<DashboardProps> = ({ children }) => {
   const searchParams = useSearchParams()
   const tabValue = searchParams.get("tab") || "chats"
 
-  const { handleSelectDeviceFile } = useSelectFileHandler()
+  const { handleSelectDeviceFiles } = useSelectFileHandler()
 
   const [contentType, setContentType] = useState<ContentType>(
     tabValue as ContentType
@@ -41,9 +41,8 @@ export const Dashboard: FC<DashboardProps> = ({ children }) => {
     event.preventDefault()
 
     const files = event.dataTransfer.files
-    const file = files[0]
 
-    handleSelectDeviceFile(file)
+    handleSelectDeviceFiles(files)
 
     setIsDragging(false)
   }

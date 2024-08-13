@@ -1,5 +1,5 @@
 import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
-import { ChatbotUIContext } from "@/context/context"
+import { AssistantImageContext, ChatbotUIContext } from "@/context/context"
 import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { cn } from "@/lib/utils"
 import { Tables } from "@/supabase/types"
@@ -23,9 +23,8 @@ import { TextareaAutosize } from "../ui/textarea-autosize"
 import { WithTooltip } from "../ui/with-tooltip"
 import { MessageActions } from "./message-actions"
 import { MessageMarkdown } from "./message-markdown"
-import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
-import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
-import { getCollectionFilesByCollectionId } from "@/db/collection-files"
+import { getAssistantImageFromStorage } from "@/db/storage/assistant-images"
+import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 
 const ICON_SIZE = 32
 
@@ -37,6 +36,7 @@ interface MessageProps {
   onStartEdit: (message: Tables<"messages">) => void
   onCancelEdit: () => void
   onSubmitEdit: (value: string, sequenceNumber: number) => void
+  image: string
 }
 
 export const Message: FC<MessageProps> = ({
@@ -46,7 +46,8 @@ export const Message: FC<MessageProps> = ({
   isLast,
   onStartEdit,
   onCancelEdit,
-  onSubmitEdit
+  onSubmitEdit,
+  image
 }) => {
   const {
     assistants,
@@ -59,7 +60,6 @@ export const Message: FC<MessageProps> = ({
     chatMessages,
     selectedAssistant,
     chatImages,
-    assistantImages,
     toolInUse,
     files,
     models
@@ -143,14 +143,6 @@ export const Message: FC<MessageProps> = ({
     ...availableOpenRouterModels
   ].find(llm => llm.modelId === message.model) as LLM
 
-  const messageAssistantImage = assistantImages.find(
-    image => image.assistantId === message.assistant_id
-  )?.base64
-
-  const selectedAssistantImage = assistantImages.find(
-    image => image.path === selectedAssistant?.image_path
-  )?.base64
-
   const modelDetails = LLM_LIST.find(model => model.modelId === message.model)
 
   const fileAccumulator: Record<
@@ -192,7 +184,7 @@ export const Message: FC<MessageProps> = ({
       onMouseLeave={() => setIsHovering(false)}
       onKeyDown={handleKeyDown}
     >
-      <div className="relative flex w-full flex-col p-6 sm:px-0 xl:w-[700px] mx-4">
+      <div className="relative flex w-full flex-col p-6 sm:px-0 mx-16">
         <div className="absolute right-5 top-7 sm:right-0">
           <MessageActions
             onCopy={handleCopy}
@@ -217,17 +209,18 @@ export const Message: FC<MessageProps> = ({
           ) : (
             <div className="flex items-center space-x-3">
               {message.role === "assistant" ? (
-                messageAssistantImage ? (
+                assistants.find(a => a.id === message.assistant_id) && image ? (
                   <Image
                     style={{
                       width: `${ICON_SIZE}px`,
                       height: `${ICON_SIZE}px`
                     }}
                     className="rounded"
-                    src={messageAssistantImage}
+                    src={image}
                     alt="assistant image"
                     height={ICON_SIZE}
                     width={ICON_SIZE}
+                    loading="lazy"
                   />
                 ) : (
                   <WithTooltip
@@ -283,7 +276,7 @@ export const Message: FC<MessageProps> = ({
                       <div className="flex animate-pulse items-center space-x-2">
                         <IconFileText size={20} />
 
-                        <div>Searching files...</div>
+                        <div>ファイルを参照中です...</div>
                       </div>
                     )
                   default:

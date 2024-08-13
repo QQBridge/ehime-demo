@@ -62,8 +62,6 @@ interface ChatbotUIContext {
   // ASSISTANT STORE
   selectedAssistant: Tables<"assistants"> | null
   setSelectedAssistant: Dispatch<SetStateAction<Tables<"assistants"> | null>>
-  assistantImages: AssistantImage[]
-  setAssistantImages: Dispatch<SetStateAction<AssistantImage[]>>
   openaiAssistants: any[]
   setOpenaiAssistants: Dispatch<SetStateAction<any[]>>
 
@@ -138,6 +136,11 @@ interface ChatbotUIContext {
   setToolInUse: Dispatch<SetStateAction<string>>
 }
 
+export const AssistantImageContext = createContext<AssistantImageContext>({
+  assistantImage: null,
+  setAssistantImage: () => {}
+})
+
 export const ChatbotUIContext = createContext<ChatbotUIContext>({
   // PROFILE STORE
   profile: null,
@@ -188,8 +191,6 @@ export const ChatbotUIContext = createContext<ChatbotUIContext>({
   // ASSISTANT STORE
   selectedAssistant: null,
   setSelectedAssistant: () => {},
-  assistantImages: [],
-  setAssistantImages: () => {},
   openaiAssistants: [],
   setOpenaiAssistants: () => {},
 
@@ -263,3 +264,8 @@ export const ChatbotUIContext = createContext<ChatbotUIContext>({
   toolInUse: "none",
   setToolInUse: () => {}
 })
+
+interface AssistantImageContext {
+  assistantImage: AssistantImage | null
+  setAssistantImage: Dispatch<SetStateAction<AssistantImage | null>>
+}
