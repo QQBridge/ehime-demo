@@ -255,7 +255,7 @@ export const ChatbotUIContext = createContext<ChatbotUIContext>({
   // RETRIEVAL STORE
   useRetrieval: false,
   setUseRetrieval: () => {},
-  sourceCount: 10,
+  sourceCount: 6,
   setSourceCount: () => {},
 
   // TOOL STORE
