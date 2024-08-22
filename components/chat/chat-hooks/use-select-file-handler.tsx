@@ -81,7 +81,12 @@ export const useSelectFileHandler = () => {
           ])
 
           // Handle docx files
-          if (file.type.includes("docx")) {
+          if (
+            file.type.includes("docx") ||
+            file.type.includes(
+              "vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+          ) {
             const arrayBuffer = await file.arrayBuffer()
             const result = await mammoth.extractRawText({
               arrayBuffer
