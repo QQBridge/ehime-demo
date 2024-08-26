@@ -100,6 +100,7 @@ export const useChatHandler = () => {
     setSelectedTools([])
     setToolInUse("none")
 
+    let allFiles = []
     let assistant = selectedAssistant
     if (chatAssistant) {
       assistant = chatAssistant
@@ -117,8 +118,21 @@ export const useChatHandler = () => {
         enabledFiles: assistant.enabled_files
       })
 
+      const assistantFiles = (
+        await getAssistantFilesByAssistantId(assistant.id)
+      ).files
+      allFiles = [...assistantFiles]
+      setChatFiles(
+        allFiles.map(file => ({
+          id: file.id,
+          name: file.name,
+          type: file.type,
+          file: null
+        }))
+      )
+      if (allFiles.length > 0) setShowFilesDisplay(true)
+
       setSelectedTools([])
-      setChatFiles([])
     } else if (selectedPreset) {
       setChatSettings({
         model: selectedPreset.model as LLMID,

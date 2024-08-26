@@ -94,6 +94,19 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
         await getAssistantToolsByAssistantId(assistant.id)
       ).tools
       setSelectedTools(assistantTools)
+      let allFiles = []
+      const assistantFiles = (await getAssistantFilesByAssistantId(item.id))
+        .files
+      allFiles = [...assistantFiles]
+      setChatFiles(
+        allFiles.map(file => ({
+          id: file.id,
+          name: file.name,
+          type: file.type,
+          file: null
+        }))
+      )
+      if (allFiles.length > 0) setShowFilesDisplay(true)
       setLoading(false)
       setSelectedPreset(null)
       setChatSettings({
