@@ -1,21 +1,20 @@
-import {ChatbotUIContext} from "@/context/context"
-import {Tables} from "@/supabase/types"
-import {ContentType} from "@/types"
-import {FC, useContext} from "react"
-import {SIDEBAR_WIDTH} from "../ui/dashboard"
-import {TabsContent} from "../ui/tabs"
+import { ChatbotUIContext } from "@/context/context"
+import { Tables } from "@/supabase/types"
+import { ContentType } from "@/types"
+import { FC, useContext } from "react"
+import { SIDEBAR_WIDTH } from "../ui/dashboard"
+import { TabsContent } from "../ui/tabs"
 //import {WorkspaceSwitcher} from "../utility/workspace-switcher"
 //import {WorkspaceSettings} from "../workspace/workspace-settings"
-import {SidebarContent} from "./sidebar-content"
-import {QuickSettings} from "../chat/quick-settings"
-
+import { SidebarContent } from "./sidebar-content"
+import { QuickSettings } from "../chat/quick-settings"
 
 interface SidebarProps {
   contentType: ContentType
   showSidebar: boolean
 }
 
-export const Sidebar: FC<SidebarProps> = ({contentType, showSidebar}) => {
+export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
   const {
     folders,
     chats,
@@ -67,7 +66,6 @@ export const Sidebar: FC<SidebarProps> = ({contentType, showSidebar}) => {
         {
           //<div className="flex items-center border-b-2 pb-2">
           //  <WorkspaceSwitcher />
-
           //  <WorkspaceSettings />
           //</div>
         }
@@ -76,7 +74,7 @@ export const Sidebar: FC<SidebarProps> = ({contentType, showSidebar}) => {
         {(() => {
           switch (contentType) {
             case "chats":
-              return renderSidebarContent("chats", chats.filter(chat => (chat.assistant_id == selectedAssistant?.id)), chatFolders)
+              return renderSidebarContent("chats", chats, chatFolders)
 
             //case "presets":
             //  return renderSidebarContent("presets", presets, presetFolders)

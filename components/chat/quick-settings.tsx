@@ -1,12 +1,13 @@
-import { ChatbotUIContext } from "@/context/context"
-import { getAssistantCollectionsByAssistantId } from "@/db/assistant-collections"
+import { AssistantImageContext, ChatbotUIContext } from "@/context/context"
 import { getAssistantFilesByAssistantId } from "@/db/assistant-files"
 import { getAssistantToolsByAssistantId } from "@/db/assistant-tools"
 import { getCollectionFilesByCollectionId } from "@/db/collection-files"
+import { getAssistantImageFromStorage } from "@/db/storage/assistant-images"
 import useHotkey from "@/lib/hooks/use-hotkey"
 import { LLM_LIST } from "@/lib/models/llm/llm-list"
+import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 import { Tables } from "@/supabase/types"
-import { LLMID } from "@/types"
+import { AssistantImage, LLMID } from "@/types"
 import { IconChevronDown, IconRobotFace } from "@tabler/icons-react"
 import Image from "next/image"
 import { FC, useContext, useEffect, useRef, useState } from "react"
@@ -20,6 +21,8 @@ import {
 } from "../ui/dropdown-menu"
 import { Input } from "../ui/input"
 import { QuickSettingOption } from "./quick-setting-option"
+import { useRouter } from "next/navigation"
+import { useChatHandler } from "./chat-hooks/use-chat-handler"
 
 interface QuickSettingsProps {}
 
@@ -29,6 +32,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   useHotkey("p", () => setIsOpen(prevState => !prevState))
 
   const {
+    chats,
     presets,
     assistants,
     selectedAssistant,
@@ -37,7 +41,6 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
     setSelectedPreset,
     setSelectedAssistant,
     setChatSettings,
-    assistantImages,
     setChatFiles,
     setSelectedTools,
     setShowFilesDisplay,
@@ -45,10 +48,31 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
   } = useContext(ChatbotUIContext)
 
   const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(false)
+  const [imageBase, setImageBase] = useState("")
+
+  const { handleNewChat } = useChatHandler()
+
+  useEffect(() => {
+    fetchAssistantImage()
+  }, [selectedAssistant])
+
+  const fetchAssistantImage = async () => {
+    if (selectedAssistant) {
+      const url =
+        (await getAssistantImageFromStorage(selectedAssistant.image_path)) || ""
+      if (url) {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const base64 = await convertBlobToBase64(blob)
+        setImageBase(base64)
+      }
+    }
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -62,26 +86,18 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
     item: Tables<"presets"> | Tables<"assistants"> | null,
     contentType: "presets" | "assistants" | "remove"
   ) => {
-    console.log({ item, contentType })
     if (contentType === "assistants" && item) {
-      setSelectedAssistant(item as Tables<"assistants">)
+      const assistant = item as Tables<"assistants">
+      setSelectedAssistant(assistant)
       setLoading(true)
+      const assistantTools = (
+        await getAssistantToolsByAssistantId(assistant.id)
+      ).tools
+      setSelectedTools(assistantTools)
       let allFiles = []
       const assistantFiles = (await getAssistantFilesByAssistantId(item.id))
         .files
       allFiles = [...assistantFiles]
-      const assistantCollections = (
-        await getAssistantCollectionsByAssistantId(item.id)
-      ).collections
-      for (const collection of assistantCollections) {
-        const collectionFiles = (
-          await getCollectionFilesByCollectionId(collection.id)
-        ).files
-        allFiles = [...allFiles, ...collectionFiles]
-      }
-      const assistantTools = (await getAssistantToolsByAssistantId(item.id))
-        .tools
-      setSelectedTools(assistantTools)
       setChatFiles(
         allFiles.map(file => ({
           id: file.id,
@@ -93,11 +109,43 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       if (allFiles.length > 0) setShowFilesDisplay(true)
       setLoading(false)
       setSelectedPreset(null)
+      setChatSettings({
+        model: assistant.model as LLMID,
+        prompt: assistant.prompt,
+        temperature: assistant.temperature,
+        contextLength: assistant.context_length,
+        includeProfileContext: assistant.include_profile_context,
+        includeWorkspaceInstructions: assistant.include_workspace_instructions,
+        embeddingsProvider: assistant.embeddings_provider as "openai" | "local",
+        enabledFiles: assistant.enabled_files
+      })
+
+      const assistantChats = chats.filter(
+        chat => chat.assistant_id == assistant.id
+      )
+      if (assistantChats.length === 0) {
+        console.log(assistant)
+        await handleNewChat(assistant)
+      } else {
+        return router.push(
+          `/${selectedWorkspace!.id}/chat/${assistantChats[0].id}`
+        )
+      }
     } else if (contentType === "presets" && item) {
       setSelectedPreset(item as Tables<"presets">)
       setSelectedAssistant(null)
       setChatFiles([])
       setSelectedTools([])
+      setChatSettings({
+        model: item.model as LLMID,
+        prompt: item.prompt,
+        temperature: item.temperature,
+        contextLength: item.context_length,
+        includeProfileContext: item.include_profile_context,
+        includeWorkspaceInstructions: item.include_workspace_instructions,
+        embeddingsProvider: item.embeddings_provider as "openai" | "local",
+        enabledFiles: false
+      })
     } else {
       setSelectedPreset(null)
       setSelectedAssistant(null)
@@ -114,21 +162,12 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
             selectedWorkspace.include_workspace_instructions,
           embeddingsProvider: selectedWorkspace.embeddings_provider as
             | "openai"
-            | "local"
+            | "local",
+          enabledFiles: true
         })
       }
       return
     }
-
-    setChatSettings({
-      model: item.model as LLMID,
-      prompt: item.prompt,
-      temperature: item.temperature,
-      contextLength: item.context_length,
-      includeProfileContext: item.include_profile_context,
-      includeWorkspaceInstructions: item.include_workspace_instructions,
-      embeddingsProvider: item.embeddings_provider as "openai" | "local"
-    })
   }
 
   const checkIfModified = () => {
@@ -170,12 +209,11 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       contentType: "assistants"
     }))
   ]
-
-  const selectedAssistantImage = selectedPreset
-    ? ""
-    : assistantImages.find(
-        image => image.path === selectedAssistant?.image_path
-      )?.base64 || ""
+  const uniqueItems = Array.from(new Set(items.map(item => item.id))).map(
+    id => {
+      return items.find(item => item.id === id)!
+    }
+  )
 
   const modelDetails = LLM_LIST.find(
     model => model.modelId === selectedPreset?.model
@@ -192,24 +230,17 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
       <DropdownMenuTrigger asChild className="max-w-[400px]" disabled={loading}>
         <Button
           variant="ghost"
-          className="flex space-x-3 text-md justify-start border border-black"
+          className="text-md flex justify-start space-x-3 border border-black"
         >
-          {selectedPreset && (
-            <ModelIcon
-              provider={modelDetails?.provider || "custom"}
-              width={32}
-              height={32}
-            />
-          )}
-
           {selectedAssistant &&
-            (selectedAssistantImage ? (
+            (imageBase ? (
               <Image
                 className="rounded"
-                src={selectedAssistantImage}
+                src={imageBase}
                 alt="Assistant"
                 width={28}
                 height={28}
+                loading="lazy"
               />
             ) : (
               <IconRobotFace
@@ -217,15 +248,14 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                 size={28}
               />
             ))}
-
           {loading ? (
-            <div className="animate-pulse">Loading assistant...</div>
+            <div className="animate-pulse">カスタムAIをロード中...</div>
           ) : (
-            <div className="flex w-full justify-between">
+            <div className="flex justify-between w-10/12 max-w-48">
               <div className="overflow-hidden text-ellipsis">
                 {selectedPreset?.name ||
                   selectedAssistant?.name ||
-                  t("デフォルト生成AI(GPT-4o)")}
+                  t("カスタムAIを選択する")}
               </div>
 
               <IconChevronDown className="ml-1" />
@@ -264,11 +294,10 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                 onSelect={() => {
                   handleSelectQuickSetting(null, "remove")
                 }}
-                image={selectedPreset ? "" : selectedAssistantImage}
               />
             )}
 
-            {items
+            {uniqueItems
               .filter(
                 item =>
                   item.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -286,15 +315,6 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
                       item,
                       contentType as "presets" | "assistants"
                     )
-                  }
-                  image={
-                    contentType === "assistants"
-                      ? assistantImages.find(
-                          image =>
-                            image.path ===
-                            (item as Tables<"assistants">).image_path
-                        )?.base64 || ""
-                      : ""
                   }
                 />
               ))}

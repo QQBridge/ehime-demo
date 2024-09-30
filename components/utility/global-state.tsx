@@ -70,7 +70,6 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
   // ASSISTANT STORE
   const [selectedAssistant, setSelectedAssistant] =
     useState<Tables<"assistants"> | null>(null)
-  const [assistantImages, setAssistantImages] = useState<AssistantImage[]>([])
   const [openaiAssistants, setOpenaiAssistants] = useState<any[]>([])
 
   // PASSIVE CHAT STORE
@@ -83,7 +82,8 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
     contextLength: 4000,
     includeProfileContext: true,
     includeWorkspaceInstructions: true,
-    embeddingsProvider: "openai"
+    embeddingsProvider: "openai",
+    enabledFiles: false
   })
   const [selectedChat, setSelectedChat] = useState<Tables<"chats"> | null>(null)
   const [chatFileItems, setChatFileItems] = useState<Tables<"file_items">[]>([])
@@ -249,8 +249,6 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
         // ASSISTANT STORE
         selectedAssistant,
         setSelectedAssistant,
-        assistantImages,
-        setAssistantImages,
         openaiAssistants,
         setOpenaiAssistants,
 

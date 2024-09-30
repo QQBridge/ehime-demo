@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS public.assistants
+ADD COLUMN is_default_chat BOOLEAN NOT NULL DEFAULT FALSE;

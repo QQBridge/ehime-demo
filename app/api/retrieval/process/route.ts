@@ -91,9 +91,18 @@ export async function POST(req: Request) {
         chunks = await processTxt(blob)
         break
       default:
-        return new NextResponse("Unsupported file type", {
+        return new NextResponse("サポートしていない拡張子のファイルです。", {
           status: 400
         })
+    }
+
+    if (chunks.filter(chunk => chunk.content !== "").length === 0) {
+      return new NextResponse(
+        JSON.stringify({ message: "ファイルにテキスト情報がありません。" }),
+        {
+          status: 400
+        }
+      )
     }
 
     let embeddings: any = []

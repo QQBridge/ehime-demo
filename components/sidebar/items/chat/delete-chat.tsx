@@ -25,7 +25,8 @@ export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {
   const router = useRouter()
   useHotkey("Backspace", () => setShowChatDialog(true))
 
-  const { setChats, chats, selectedWorkspace } = useContext(ChatbotUIContext)
+  const { setChats, chats, selectedWorkspace, selectedAssistant, assistants } =
+    useContext(ChatbotUIContext)
   const { handleNewChat } = useChatHandler()
 
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -39,10 +40,11 @@ export const DeleteChat: FC<DeleteChatProps> = ({ chat }) => {
 
     setShowChatDialog(false)
     const newChats = chats.filter(c => c.id !== chat.id)
+    const assistant = assistants.filter(a => a.id === chat.assistant_id)[0]
     if (newChats.length > 0) {
       router.push(`/${selectedWorkspace!.id}/chat/${newChats[0].id}`)
     } else {
-      handleNewChat()
+      handleNewChat(assistant)
     }
   }
 

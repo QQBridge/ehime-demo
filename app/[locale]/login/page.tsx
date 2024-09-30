@@ -202,10 +202,10 @@ export default async function Login({
           placeholder="••••••••"
         />
 
-        <SubmitButton className="mb-2 rounded-md bg-blue-700 px-4 py-2 text-white text-center">
+        <SubmitButton className="mb-2 rounded-md bg-blue-700 px-4 py-2 text-center text-white">
           ログイン
         </SubmitButton>
-
+{/* 
         <SubmitButton
           formAction={signUp}
           className="border-foreground/20 mb-2 rounded-md border px-4 py-2 text-center"
@@ -222,6 +222,7 @@ export default async function Login({
             パスワードをリセット
           </button>
         </div>
+*/}
 
         {searchParams?.message && (
           <p className="bg-foreground/10 text-foreground mt-4 p-4 text-center">
