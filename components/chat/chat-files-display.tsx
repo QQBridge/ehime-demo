@@ -17,7 +17,7 @@ import {
   IconCirclePlus
 } from "@tabler/icons-react"
 import Image from "next/image"
-import { FC, useContext, useState, useRef } from "react"
+import { FC, useContext, useState, useRef, useEffect } from "react"
 //import {Button} from "../ui/button"
 import { FilePreview } from "../ui/file-preview"
 import { WithTooltip } from "../ui/with-tooltip"
@@ -43,11 +43,18 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
     chatImages,
     setChatImages,
     setChatFiles,
-    setUseRetrieval
+    setUseRetrieval,
+    selectedChat,
+    selectedAssistant
   } = useContext(ChatbotUIContext)
 
+  useEffect(() => {
+    setNewMessageFiles([])
+    setNewMessageImages([])
+  }, [selectedChat])
+
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { filesToAccept, handleSelectDeviceFile } = useSelectFileHandler()
+  const { filesToAccept, handleSelectDeviceFiles } = useSelectFileHandler()
   const [selectedFile, setSelectedFile] = useState<ChatFile | null>(null)
   const [selectedImage, setSelectedImage] = useState<MessageImage | null>(null)
   const [showPreview, setShowPreview] = useState(false)
@@ -77,7 +84,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
     window.open(link, "_blank")
   }
 
-  return (
+  return selectedAssistant ? (
     <>
       {showPreview && selectedImage && (
         <FilePreview
@@ -126,6 +133,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
                 setSelectedImage(image)
                 setShowPreview(true)
               }}
+              loading="lazy"
             />
 
             <IconX
@@ -133,11 +141,9 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
               onClick={e => {
                 e.stopPropagation()
                 setNewMessageImages(
-                  newMessageImages.filter(f => f.messageId !== image.messageId)
+                  newMessageImages.filter(f => f.url !== image.url)
                 )
-                setChatImages(
-                  chatImages.filter(f => f.messageId !== image.messageId)
-                )
+                setChatImages(chatImages.filter(f => f.url !== image.url))
               }}
             />
           </div>
@@ -193,6 +199,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
                 <div className="truncate">{file.name}</div>
               </div>
 
+              {/* {newMessageFiles.some(f => f.id === file.id) && ( */}
               <IconX
                 className="bg-muted-foreground border-primary absolute right-[-6px] top-[-6px] flex size-5 cursor-pointer items-center justify-center rounded-full border-DEFAULT text-[10px] hover:border-red-500 hover:bg-white hover:text-red-500"
                 onClick={e => {
@@ -203,6 +210,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
                   setChatFiles(chatFiles.filter(f => f.id !== file.id))
                 }}
               />
+              {/* )} 一旦GPTsでファイル登録する場合までコメントアウトしとく */}
             </div>
           )
         )}
@@ -219,9 +227,9 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
               type="file"
               onChange={e => {
                 if (!e.target.files) return
-                handleSelectDeviceFile(e.target.files[0])
+                handleSelectDeviceFiles(e.target.files)
               }}
-              accept={filesToAccept}
+              accept={filesToAccept.join(",")}
             />
           </div>
           <div className="truncate text-sm font-bold text-white">
@@ -230,6 +238,8 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
         </div>
       </div>
     </>
+  ) : (
+    <></>
   )
 }
 

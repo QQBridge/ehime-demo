@@ -1,4 +1,4 @@
-import { ChatbotUIContext } from "@/context/context"
+import { AssistantImageContext, ChatbotUIContext } from "@/context/context"
 import useHotkey from "@/lib/hooks/use-hotkey"
 import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { cn } from "@/lib/utils"
@@ -14,11 +14,12 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { Input } from "../ui/input"
 import { TextareaAutosize } from "../ui/textarea-autosize"
-import { ChatCommandInput } from "./chat-command-input"
 import { useChatHandler } from "./chat-hooks/use-chat-handler"
 import { useChatHistoryHandler } from "./chat-hooks/use-chat-history"
 import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 import { useSelectFileHandler } from "./chat-hooks/use-select-file-handler"
+import { convertBlobToBase64 } from "@/lib/blob-to-b64"
+import { getAssistantImageFromStorage } from "@/db/storage/assistant-images"
 
 interface ChatInputProps {}
 
@@ -30,6 +31,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
   })
 
   const [isTyping, setIsTyping] = useState<boolean>(false)
+  const [imageBase, setImageBase] = useState("")
 
   const {
     isAssistantPickerOpen,
@@ -52,8 +54,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     setFocusFile,
     chatSettings,
     selectedTools,
-    setSelectedTools,
-    assistantImages
+    setSelectedTools
   } = useContext(ChatbotUIContext)
 
   const {
@@ -65,7 +66,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
 
   const { handleInputChange } = usePromptAndCommand()
 
-  const { filesToAccept, handleSelectDeviceFile } = useSelectFileHandler()
+  const { filesToAccept, handleSelectDeviceFiles } = useSelectFileHandler()
 
   const {
     setNewMessageContentToNextUserMessage,
@@ -75,13 +76,31 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    fetchAssistantImage()
     setTimeout(() => {
       handleFocusChatInput()
     }, 200) // FIX: hacky
   }, [selectedPreset, selectedAssistant])
 
+  const fetchAssistantImage = async () => {
+    if (selectedAssistant) {
+      const url =
+        (await getAssistantImageFromStorage(selectedAssistant.image_path)) || ""
+      if (url) {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const base64 = await convertBlobToBase64(blob)
+        setImageBase(base64)
+      } else {
+        setImageBase("")
+      }
+    } else {
+      setImageBase("")
+    }
+  }
+
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (!isTyping && event.key === "Enter" && !event.shiftKey) {
+    if (!isTyping && event.key === "Enter" && event.shiftKey) {
       event.preventDefault()
       setIsPromptPickerOpen(false)
       handleSendMessage(userInput, chatMessages, false)
@@ -146,6 +165,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     )?.imageInput
 
     const items = event.clipboardData.items
+    const files = []
     for (const item of items) {
       if (item.type.indexOf("image") === 0) {
         if (!imagesAllowed) {
@@ -156,12 +176,13 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
         }
         const file = item.getAsFile()
         if (!file) return
-        handleSelectDeviceFile(file)
+        files.push(file)
       }
     }
+    handleSelectDeviceFiles(files)
   }
 
-  return (
+  return selectedAssistant ? (
     <>
       <div className="flex flex-col flex-wrap justify-center gap-2">
         {selectedTools &&
@@ -187,17 +208,14 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
 
         {selectedAssistant && (
           <div className="border-primary mx-auto flex w-fit items-center space-x-2 rounded-lg border p-1.5">
-            {selectedAssistant.image_path && (
+            {imageBase && (
               <Image
                 className="rounded"
-                src={
-                  assistantImages.find(
-                    img => img.path === selectedAssistant.image_path
-                  )?.base64
-                }
+                src={imageBase}
                 width={28}
                 height={28}
                 alt={selectedAssistant.name}
+                loading="lazy"
               />
             )}
 
@@ -209,16 +227,14 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
       </div>
 
       <div className="relative mt-3 flex min-h-[60px] w-full items-center justify-center rounded-xl border border-black">
-        <div className="absolute bottom-[76px] left-0 max-h-[300px] w-full overflow-auto rounded-xl dark:border-none">
-          <ChatCommandInput />
-        </div>
-
         <>
-          <IconCirclePlus
-            className="absolute bottom-[12px] left-3 cursor-pointer p-1 hover:opacity-50"
-            size={32}
-            onClick={() => fileInputRef.current?.click()}
-          />
+          {chatSettings?.enabledFiles && (
+            <IconCirclePlus
+              className="absolute bottom-[12px] left-3 cursor-pointer p-1 hover:opacity-50"
+              size={32}
+              onClick={() => fileInputRef.current?.click()}
+            />
+          )}
 
           {/* Hidden input to select files from device */}
           <Input
@@ -227,9 +243,9 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
             type="file"
             onChange={e => {
               if (!e.target.files) return
-              handleSelectDeviceFile(e.target.files[0])
+              handleSelectDeviceFiles(e.target.files)
             }}
-            accept={filesToAccept}
+            accept={filesToAccept.join(",")}
           />
         </>
 
@@ -274,5 +290,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
         </div>
       </div>
     </>
+  ) : (
+    <></>
   )
 }

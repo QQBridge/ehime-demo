@@ -65,8 +65,6 @@ export async function POST(request: Request) {
       if (openaiError) {
         throw openaiError
       }
-
-      chunks = openaiFileItems
     } else if (embeddingsProvider === "local") {
       const localEmbedding = null
 

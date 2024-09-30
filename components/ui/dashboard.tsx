@@ -27,13 +27,13 @@ export const Dashboard: FC<DashboardProps> = ({ children }) => {
   const searchParams = useSearchParams()
   const tabValue = searchParams.get("tab") || "chats"
 
-  const { handleSelectDeviceFile } = useSelectFileHandler()
+  const { handleSelectDeviceFiles } = useSelectFileHandler()
 
   const [contentType, setContentType] = useState<ContentType>(
     tabValue as ContentType
   )
   const [showSidebar, setShowSidebar] = useState(
-    localStorage.getItem("showSidebar") === "true"
+    localStorage.getItem("showSidebar") !== "false"
   )
   const [_, setIsDragging] = useState(false)
 
@@ -41,9 +41,8 @@ export const Dashboard: FC<DashboardProps> = ({ children }) => {
     event.preventDefault()
 
     const files = event.dataTransfer.files
-    const file = files[0]
 
-    handleSelectDeviceFile(file)
+    handleSelectDeviceFiles(files)
 
     setIsDragging(false)
   }
@@ -100,7 +99,7 @@ export const Dashboard: FC<DashboardProps> = ({ children }) => {
       </div>
 
       <div
-        className="bg-muted/50 relative flex w-full min-w-[90%] grow flex-col sm:min-w-fit"
+        className="bg-muted/50 relative flex w-full grow flex-col"
         onDrop={onFileDrop}
         onDragOver={onDragOver}
         onDragEnter={handleDragEnter}

@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS public.assistants
+ADD COLUMN enabled_files BOOLEAN NOT NULL DEFAULT FALSE;

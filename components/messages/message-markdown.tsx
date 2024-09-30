@@ -15,7 +15,9 @@ export const MessageMarkdown: FC<MessageMarkdownProps> = ({ content }) => {
       remarkPlugins={[remarkGfm, remarkMath]}
       components={{
         p({ children }) {
-          return <p className="mb-2 last:mb-0">{children}</p>
+          return (
+            <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>
+          )
         },
         img({ node, ...props }) {
           return <img className="max-w-[67%]" {...props} />

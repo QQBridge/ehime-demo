@@ -1,5 +1,5 @@
 import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
-//import {ChatbotUIContext} from "@/context/context"
+import { ChatbotUIContext } from "@/context/context"
 //import {createFolder} from "@/db/folders"
 import { ContentType } from "@/types"
 import {
@@ -7,8 +7,8 @@ import {
   IconPlus
 } from "@tabler/icons-react"
 import {
-  FC
-  //useContext,
+  FC,
+  useContext
   //useState
 } from "react"
 import { Button } from "../ui/button"
@@ -29,8 +29,7 @@ export const SidebarCreateButtons: FC<SidebarCreateButtonsProps> = ({
   contentType
   //hasData
 }) => {
-  //const {profile, selectedWorkspace, folders, setFolders} =
-  //  useContext(ChatbotUIContext)
+  const { selectedAssistant } = useContext(ChatbotUIContext)
   const { handleNewChat } = useChatHandler()
 
   //const [isCreatingPrompt, setIsCreatingPrompt] = useState(false)
@@ -104,13 +103,17 @@ export const SidebarCreateButtons: FC<SidebarCreateButtonsProps> = ({
 
   return (
     <div className="flex w-full space-x-2">
-      <Button
-        className="flex h-[42px] grow justify-between"
-        onClick={getCreateFunction()}
-      >
-        新規作成
-        <IconPlus className="mr-1" size={20} />
-      </Button>
+      {selectedAssistant ? (
+        <Button
+          className="flex h-[42px] grow justify-between"
+          onClick={getCreateFunction()}
+        >
+          新規作成
+          <IconPlus className="mr-1" size={20} />
+        </Button>
+      ) : (
+        <></>
+      )}
 
       {/*hasData && (
         <Button className="size-[36px] p-1" onClick={handleCreateFolder}>
