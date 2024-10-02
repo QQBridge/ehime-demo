@@ -4,10 +4,12 @@ import { ContentType } from "@/types"
 import { FC, useContext } from "react"
 import { SIDEBAR_WIDTH } from "../ui/dashboard"
 import { TabsContent } from "../ui/tabs"
-//import {WorkspaceSwitcher} from "../utility/workspace-switcher"
-//import {WorkspaceSettings} from "../workspace/workspace-settings"
+import { Button } from "../ui/button"
+import { IconLogout } from "@tabler/icons-react"
 import { SidebarContent } from "./sidebar-content"
 import { QuickSettings } from "../chat/quick-settings"
+import { supabase } from "@/lib/supabase/browser-client"
+import { useRouter } from "next/navigation"
 
 interface SidebarProps {
   contentType: ContentType
@@ -15,31 +17,17 @@ interface SidebarProps {
 }
 
 export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
-  const {
-    folders,
-    chats,
-    //  presets,
-    //  prompts,
-    //  files,
-    //  collections,
-    //  assistants,
-    //  tools,
-    //  models
-    selectedAssistant
-  } = useContext(ChatbotUIContext)
+  const router = useRouter()
+  const { folders, chats } = useContext(ChatbotUIContext)
 
   const chatFolders = folders.filter(folder => folder.type === "chats")
-  //const presetFolders = folders.filter(folder => folder.type === "presets")
-  //const promptFolders = folders.filter(folder => folder.type === "prompts")
-  //const filesFolders = folders.filter(folder => folder.type === "files")
-  //const collectionFolders = folders.filter(
-  //  folder => folder.type === "collections"
-  //)
-  //const assistantFolders = folders.filter(
-  //  folder => folder.type === "assistants"
-  //)
-  //const toolFolders = folders.filter(folder => folder.type === "tools")
-  //const modelFolders = folders.filter(folder => folder.type === "models")
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push("/login")
+    router.refresh()
+    return
+  }
 
   const renderSidebarContent = (
     contentType: ContentType,
@@ -75,40 +63,19 @@ export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
           switch (contentType) {
             case "chats":
               return renderSidebarContent("chats", chats, chatFolders)
-
-            //case "presets":
-            //  return renderSidebarContent("presets", presets, presetFolders)
-
-            //case "prompts":
-            //  return renderSidebarContent("prompts", prompts, promptFolders)
-
-            //case "files":
-            //  return renderSidebarContent("files", files, filesFolders)
-
-            //case "collections":
-            //  return renderSidebarContent(
-            //    "collections",
-            //    collections,
-            //    collectionFolders
-            //  )
-
-            //case "assistants":
-            //  return renderSidebarContent(
-            //    "assistants",
-            //    assistants,
-            //    assistantFolders
-            //  )
-
-            //case "tools":
-            //  return renderSidebarContent("tools", tools, toolFolders)
-
-            //case "models":
-            //  return renderSidebarContent("models", models, modelFolders)
-
             default:
               return null
           }
         })()}
+        <Button
+          tabIndex={-1}
+          className="text cursor-pointer h-11 max-w-56 justify-between mb-4"
+          size="sm"
+          onClick={handleSignOut}
+        >
+          ログアウト
+          <IconLogout className="mr-1" size={20} />
+        </Button>
       </div>
     </TabsContent>
   )
