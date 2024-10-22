@@ -17,10 +17,11 @@ import {
   handleHostedChat,
   handleLocalChat,
   handleRetrieval,
+  handleWebRetrieval,
   processResponse,
   validateChatSettings
 } from "../chat-helpers"
-import type { ChatFile } from "@/types"
+import type { ChatFile, FileItemChunk } from "@/types"
 import { Assistant } from "openai/resources/beta/assistants/assistants.mjs"
 
 export const useChatHandler = () => {
@@ -233,6 +234,7 @@ export const useChatHandler = () => {
       const b64Images = newMessageImages.map(image => image.base64)
 
       let retrievedFileItems: Tables<"file_items">[] = []
+      let searchResults: FileItemChunk[] = []
 
       if (
         (newMessageFiles.length > 0 || chatFiles.length > 0) &&
@@ -247,6 +249,10 @@ export const useChatHandler = () => {
           chatSettings!.embeddingsProvider,
           sourceCount
         )
+      }
+
+      if (selectedAssistant?.is_web_search) {
+        searchResults = await handleWebRetrieval(userInput)
       }
 
       const { tempUserChatMessage, tempAssistantChatMessage } =
@@ -268,7 +274,8 @@ export const useChatHandler = () => {
           : [...chatMessages, tempUserChatMessage],
         assistant: selectedChat?.assistant_id ? selectedAssistant : null,
         messageFileItems: retrievedFileItems,
-        chatFileItems: chatFileItems
+        chatFileItems: chatFileItems,
+        webSearchResults: searchResults
       }
 
       let generatedText = ""

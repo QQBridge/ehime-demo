@@ -1,5 +1,5 @@
 import { Tables } from "@/supabase/types"
-import { ChatPayload, MessageImage } from "@/types"
+import { ChatPayload, FileItemChunk, MessageImage } from "@/types"
 import { encode } from "gpt-tokenizer"
 import { getBase64FromDataURL, getMediaTypeFromDataURL } from "@/lib/utils"
 
@@ -12,20 +12,20 @@ const buildBasePrompt = (
   let fullPrompt = ""
 
   if (assistant) {
-    fullPrompt += `<INJECT ROLE>\nYou are not an AI. You are ${assistant.name}.\n</INJECT ROLE>\n\n`
+    fullPrompt += `<INJECT ROLE>\nあなたは ${assistant.name}です。\n</INJECT ROLE>\n\n`
   }
 
-  fullPrompt += `Today is ${new Date().toLocaleDateString()}.\n\n`
+  fullPrompt += `今日の日付は ${new Date().toLocaleDateString()} です。\n\n`
 
   if (profileContext) {
-    fullPrompt += `User Info:\n${profileContext}\n\n`
+    fullPrompt += `ユーザー情報:\n${profileContext}\n\n`
   }
 
   if (workspaceInstructions) {
-    fullPrompt += `System Instructions:\n${workspaceInstructions}\n\n`
+    fullPrompt += `システムプロンプト:\n${workspaceInstructions}\n\n`
   }
 
-  fullPrompt += `User Instructions:\n${prompt}`
+  fullPrompt += `ユーザーからのプロンプト:\n${prompt}`
 
   return fullPrompt
 }
@@ -41,7 +41,8 @@ export async function buildFinalMessages(
     chatMessages,
     assistant,
     messageFileItems,
-    chatFileItems
+    chatFileItems,
+    webSearchResults
   } = payload
 
   const BUILT_PROMPT = buildBasePrompt(
@@ -172,15 +173,28 @@ export async function buildFinalMessages(
     }
   }
 
+  if (webSearchResults.length > 0) {
+    const retrievalText = buildRetrievalText(webSearchResults)
+
+    finalMessages[finalMessages.length - 1] = {
+      ...finalMessages[finalMessages.length - 1],
+      content: `${
+        finalMessages[finalMessages.length - 1].content
+      }\n\n${retrievalText}`
+    }
+  }
+
   return finalMessages
 }
 
-function buildRetrievalText(fileItems: Tables<"file_items">[]) {
+function buildRetrievalText(
+  fileItems: Tables<"file_items">[] | FileItemChunk[]
+) {
   const retrievalText = fileItems
     .map(item => `<BEGIN SOURCE>\n${item.content}\n</END SOURCE>`)
     .join("\n\n")
 
-  return `You may use the following sources if needed to answer the user's question. If you don't know the answer, say "I don't know."\n\n${retrievalText}`
+  return `もしユーザーへの回答に必要であれば、以下のSOURCEを用いてください。もしわからない質問が来たら「わかりません」と答えてください。"\n\n${retrievalText}`
 }
 
 function adaptSingleMessageForGoogleGemini(message: any) {
