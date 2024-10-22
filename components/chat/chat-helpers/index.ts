@@ -95,7 +95,6 @@ export const handleWebRetrieval = async (userInput: string) => {
   const { results } = (await response.json()) as {
     results: FileItemChunk[]
   }
-  console.log(results)
 
   return results
 }
