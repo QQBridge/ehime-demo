@@ -1,7 +1,6 @@
 import { FileItemChunk } from "@/types"
 import { encode } from "gpt-tokenizer"
 import axios from "axios"
-
 // APIキーとエンドポイントを環境変数から取得
 const BING_SUBSCRIPTION_KEY = process.env.BING_SUBSCRIPTION_KEY
 const BING_ENDPOINT = "https://api.bing.microsoft.com/v7.0/search"
@@ -10,6 +9,8 @@ const BING_PATH = "/v7.0/search"
 
 interface SearchResult {
   snippet: string
+  url: string
+  siteName: string
 }
 
 interface BingSearchResponse {
@@ -24,7 +25,7 @@ const webSearch = async (query: string) => {
     const response = await axios.get<BingSearchResponse>(BING_ENDPOINT, {
       params: {
         q: query,
-        count: 5
+        count: 15
       },
       headers: {
         "Ocp-Apim-Subscription-Key": BING_SUBSCRIPTION_KEY
@@ -32,7 +33,14 @@ const webSearch = async (query: string) => {
     })
 
     const results = response.data.webPages.value
-    return results.map(result => result.snippet)
+    return results.map(
+      result =>
+        `
+      ページ名: ${result.siteName}
+      URL: ${result.url}
+      内容: ${result.snippet}
+      `
+    )
   } catch (error) {
     console.error("Error searching Bing:", error)
     return []

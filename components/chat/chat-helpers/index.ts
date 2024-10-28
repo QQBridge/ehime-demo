@@ -81,10 +81,11 @@ export const handleRetrieval = async (
 }
 
 export const handleWebRetrieval = async (userInput: string) => {
+  const query = `松山 道後温泉 宿泊プラン ${userInput}`
   const response = await fetch("/api/retrieval/retrieve/web", {
     method: "POST",
     body: JSON.stringify({
-      userInput
+      query
     })
   })
 

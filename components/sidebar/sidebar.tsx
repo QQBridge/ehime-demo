@@ -22,12 +22,12 @@ export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
 
   const chatFolders = folders.filter(folder => folder.type === "chats")
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push("/login")
-    router.refresh()
-    return
-  }
+  // const handleSignOut = async () => {
+  //   await supabase.auth.signOut()
+  //   router.push("/login")
+  //   router.refresh()
+  //   return
+  // }
 
   const renderSidebarContent = (
     contentType: ContentType,
@@ -67,7 +67,7 @@ export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
               return null
           }
         })()}
-        <Button
+        {/* <Button
           tabIndex={-1}
           className="text cursor-pointer h-11 max-w-56 justify-between mb-4"
           size="sm"
@@ -75,7 +75,7 @@ export const Sidebar: FC<SidebarProps> = ({ contentType, showSidebar }) => {
         >
           ログアウト
           <IconLogout className="mr-1" size={20} />
-        </Button>
+        </Button> */}
       </div>
     </TabsContent>
   )
