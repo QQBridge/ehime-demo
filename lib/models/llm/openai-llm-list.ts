@@ -9,7 +9,7 @@ const GPT4o: LLM = {
   provider: "openai",
   hostedId: "gpt-4o",
   platformLink: OPENAI_PLATORM_LINK,
-  imageInput: false,
+  imageInput: true,
   pricing: {
     currency: "USD",
     unit: "1M tokens",
